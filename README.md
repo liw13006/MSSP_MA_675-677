@@ -2,5 +2,3 @@
 Practicum Personal Repository
 
 Reproducibility is the key
-
-gskafjek;qdflbkhjxfkdw;fbkjdwfb
