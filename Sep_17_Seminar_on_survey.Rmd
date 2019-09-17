@@ -1,0 +1,82 @@
+---
+title: "Sep_17_seminar"
+author: "Weiling Li"
+date: "9/17/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Survey  
+
+- A survey can be a sampling design process  
+- A measurement  
+- ...
+
+## The Design Process  
+
+- The instrument  
+- What measures we want to use? Answering this question often dictate the instrument. eg: getting feedback from students; observe students behavior  
+
+- Delivery modality. What to deliver  
+
+- The contents/Items  
+- The purpose  
+
+## Unintended Design Consequences  
+- Survey too long: fatigue bias  
+- Order of the items. In logical order? Randomized?  
+- Was survey actually the best way to collect data? like factual data, instead of asking, one can collect the same data from other methods.  
+
+## Other things to look for...  
+- MTMM: Multitrait Multimethod Analysis.  
+- Translations, for examples translate an Eng survey into another language like Chinese  
+- Sensitive items in the survey, participants might not willing to answer these questions truthfully.  
+
+## Know the Research Questions & the purpose  
+- Ethical concerns.  
+- Design the tool. Validation of the tool. Clients might use it to answer other RQs, some might run into ethical concerns.  
+
+## What is usually measured  
+- Surveys are good for:  
+-- attitudes  
+-- beliefs  
+-- opinions  
+-- needs  
+-- states or traits  
+-- (espoused) practices. people is tricky when asked if they have done something  
+-- performance/competensies(TEST)  
+
+## The Latent Variable Model (a.k.a., the "measurement" model)  
+Example: measuring "G" as general intelligence. several tests will be given that same intelligence will give very similar results. one only have controls to the tests and try to come up with statistics of "G".  
+- Uses variance and covariance to gain insights of "G"
+
+### Why is the model so very important?  
+eg: question is: Do you like maths? two groups(Mass vs HK) two means. use t-test to calculate. HOWEVER, the people doing survey are from two very different groups.  
+although the instrument used(the survey) is the same. But, the measurement invariance between the two groups are very likely screw up the results if they are not considered.
+
+## EFA vs. CFA  
+- EFA: exploratory factor analysis. figure out how many groups in the population and what items belongs to what group.  
+- CFA: confirmatory factor analysis. split population into pre-set groups.   
+
+## Response Rates  
+- measurable in some cases while in other cases, not measurable(eg:snowball sampling).
+
+## Response Bias  
+- different ppl respond for different reasons.  
+## Stratification & Weighting  
+- Stratified sample.
+## Sampling Variance Estimation for Complex Samples & Underrepresented Populations  
+## Non-response & Missing Data
+## Imputation for Item-Missing Data
+## Analyzing the Data  
+- clean data  
+- Cross-tabs  
+- Testing means  
+- Regression Analysis  
+## Structual Equation Modeling(SEM)  
+- Multivariate Analysis  
+- figuring out mediating factors that have a more complex relationships connecting inputs to outputs. Like neural networks.  
+- handouts from the lecturer about "Evaluating the Quality of a Survey Research Study"  
