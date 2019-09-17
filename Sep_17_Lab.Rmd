@@ -1,0 +1,21 @@
+---
+title: "Sep_17_Lab"
+author: "Weiling Li"
+date: "9/17/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Intake form
+
+## Goals  
+1) fully understand the experiment design(masanao's butterfly experiment)  
+2) you want to be able to summarize project to someone else  
+3) clear goals, including milestones  
+
+## During Intake  
+1) student needs to complete:  
+- Project description  
+- Initial milestone  
