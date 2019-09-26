@@ -1,0 +1,55 @@
+---
+title: "Why You Should Learn Astronomy"
+author: "Weiling Li"
+date: "9/25/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+
+The great philosopher Immanuel Kant once said:
+
+>   "Two things awe me most, the starry sky above me and the moral law within me."    
+>                                                                         --Immanuel Kant
+
+It is an undeniable truth that long before Homo Sapiens, a.k.a human, finally learn how to speak, we had already began to wonder what lies above what we can not reach and see(An example can be found [*here*](https://www.maverickscience.com/suns-and-planets-in-neolithic-rock-art/)). At first, we did not know what they are and how they works, so we made up Gods that dictate the skys and stars. And as history progresses, with the help of "a handful of people", such as Galileo, Newton, Einstein, [*Henrietta Swan Leavitt*](https://en.wikipedia.org/wiki/Henrietta_Swan_Leavitt), we are able to push the boundary of the god further and further away. As we doing that, we are closer and closer to the ultimate reality of our universe: What is our universe? How does it work? What is the future waiting ahead of us?. Besides these questions, through astronomy, we will also getting closer to the answers of questions that explain our own existance: Who are we? Why we are here? What is the purpose of life?\newline
+
+Apart from the philosophy point of view, space is just beautiful. The sheer size and the astronomical events that happened and happening can often break human languages. With the Hubble telescope, Gaia and some other famous on earth telescopes(such as Event Horizon Telescope), one can observe these magnificent fireworks and structures in a size and distance that no human signals had ever reached. Things like [*supernovae*](https://www.nasa.gov/subject/7226/supernova/), [*Supermassive Blackholes*](https://www.nasa.gov/mission_pages/chandra/news/black-hole-image-makes-history) as well as [*galaxies*](https://www.spacetelescope.org/images/archive/category/galaxies/) are themselves art works done by the law of physics.
+
+# Methods
+    
+Learning Astronomy is not as scary as one might think. With a enthusiastic heart towards the unknown and a little math background, one can quickly hop on the bus of astronomy. For readers who only wish to enjoy the view of the cosmos, it does not take any education at all. Try google [*"NASA images"*](https://www.google.com/search?q=nasa+images&oq=nasa+images&aqs=chrome..69i57j0l4j69i60.2470j0j4&sourceid=chrome&ie=UTF-8) today and start your journey from there. If you find it interesting and your curiosity is calling, here are some advices one can take which will eventually guide you to a professional participant in astronomy.\newline
+
+1. Start Small: there are a lot of interesting youtube channels that covers astronomy. Personally, I found [**PBS Space Time**](https://www.youtube.com/channel/UC7_gcs09iThXybpVgjHZ_7g) and [**Kurzgesagt – In a Nutshell**](https://www.youtube.com/user/Kurzgesagt) very informative and provides a lot of basic information about what had been known about the universe and what lies beyond.
+
+2. Gain Knowledge: if knowing what is cool do not satisfy your curiosity, you need to gain more knowledge in order to finally appreciate the work done by scientists. Typically, some math and physics courses can definitly help you steer your way into the more detailed findings in the journals and papers.
+
+3. Attend Seminars: the best way to get familier with the field is to attend the "parties" held by "nerdy" astronomers. The community is very welcoming, so ask a lot of questions. To get involved in these events are easy, lots of online resources can be found online, such as: [**the Royal Institution**](https://www.youtube.com/user/TheRoyalInstitution), [**Perimeter Institute for Theoretical Physics**](https://www.youtube.com/user/PIOutreach). From there, one can easily found other resources which is more local and accesible
+
+4. Audit Univeristy or Online Courses, even online text books: systematic training is the most cost-efficient way to obtain knowledge in a certain field. If one's enthusism can push this far, study is the ultimate way to improve.
+
+5. Last thing I would suggest, is to apply for a job in related field. One does not need to be an astrophisicist to work for NASA, apply for other positions that suit your skills in the industry. Years of training and working is the best teacher.
+
+From this point forward, the road can only be determined by the individual who is taking it. Guidance for those audiences is beyond the scope of this article.
+
+# Results
+
+The path suggested can guide a person from 0 knowledge to a professionally ready state. But quiting at any of the steps is understandable and acceptable. The purpose of this article is to raise awareness of astronomy and encourage more people to participate in this area. Any level of participation is welcomed by the community.
+
+# Discussions
+
+The procedure proposed above only has one observation, that is, the author. Since the author left the pipeline on stage 3, only the first 3 stages can be discussed. First stage took the author the longest time to go through. Because there are a lot of interesting materials to go through, one may find it very time consuming. However, it is a pleasent journey for the author because the materials are very interesting themselves and the youtube channels had done a very good job organizing them. The rest of the two stages comes natrually and It does not take long for the author to be come involved. After getting involved in the astronomy, author supprising found out that the way he looks at the world had changed greatly. Inner peace had been achieved and the author is left with more serenity and is able to focus on many other things that really matters.
+
+# Conclusion
+
+As the article suggested, everyone should learn astronomy because of the following:
+
+1. It answers the ultimate question: who we are, where do we come from and where are we going?
+
+2. It is facinating! Just look at NASA's hubble image. Gaia's Star location and Most importantly, the 1st ever image of black whole.
+
+3. It allows one to realize how small each individual is, clearing one's mind and enable one to really start to see things as a species and focus on more important things in life 

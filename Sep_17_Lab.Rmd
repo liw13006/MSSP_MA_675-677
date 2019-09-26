@@ -19,3 +19,12 @@ knitr::opts_chunk$set(echo = TRUE)
 1) student needs to complete:  
 - Project description  
 - Initial milestone  
+
+---
+Two different fertilizer  
+
+package called: PlantGrowth: two fertilizers and a controlled group.  
+
+deliverables: Graphic results, written results.  
+
+

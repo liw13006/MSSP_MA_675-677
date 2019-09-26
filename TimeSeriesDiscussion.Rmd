@@ -1,0 +1,206 @@
+---
+title: "Time Series Analysis"
+author: "Angela Zhai"
+date: "9/22/2019"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse, forecast, tseries)
+```
+
+## Introduction
+
+### What is Time Series?
+
+Any metric that is measured over regular time intervals makes a Time Series. 
+
+Example: 
+
+- Weather data
+
+- Stock prices
+
+- Industry forecasts
+
+- etc.
+
+```{r echo=FALSE}
+knitr::include_graphics("stock.png")
+```
+
+Source: https://finance.yahoo.com/quote/DOW/
+
+### Stationary Series and Non-stationary Series
+
+Stationary Series
+
+```{r out.width = "30%", fig.align = "left", echo=FALSE}
+knitr::include_graphics("Mean_stationary.png")
+```
+
+Non-stationary Series
+
+```{r out.width = "30%", echo=FALSE}
+knitr::include_graphics("Mean_nonstationary.png")
+knitr::include_graphics("Var_nonstationary.png")
+knitr::include_graphics("Cov_nonstationary.png")
+```
+
+Source: https://www.analyticsvidhya.com/blog/2015/12/complete-tutorial-time-series-modeling/
+
+### Universal Time
+
+UTC (*Coordinated Universal Time*) is the **time standard** commonly used across the world. It is not a time zone.
+
+## Quarterly Data: UK Gas Consumption
+
+Step 1. Check whether an object is a time series (is.ts()), and/or create time-series objects(ts()) if needed.
+
+```{r}
+# quarterly data:  UKgas
+data("UKgas")  ## UKgas is available in base R 
+               ## quarterly data
+
+?UKgas  ## to see a description of the data, 
+        ## including start year and quarter
+
+is.ts(UKgas)
+```
+
+If *FALSE*:
+```{r eval=FALSE}
+UKg <- ts(UKgas, frequency = 4, start= c(1960,1))
+```
+
+Frequency is the number of observations per unit time (1=annual, 4=quartly, 12=monthly, etc.).
+
+What does time series object looks like?
+
+```{r}
+UKgas
+```
+
+
+Step 2. Visualize the time series.
+
+```{r}
+plot(UKgas, type="b", pch=20)
+```
+
+Step 3. Split the time series into seasonality, trend and error components.
+
+For Additive Time Series, Observed = Trend + Seasonal + Random.
+
+```{r fig.height=6}
+deUKgas_a <- decompose(UKgas, type="additive")
+plot(deUKgas_a)  ## time series, trend, seasonality, random
+```
+
+For Multiplicative Time Series, Observed = Trend $*$ Seasonal $*$ Random.
+
+```{r fig.height=6}
+deUKgas_m <- decompose(UKgas, type="mult")
+plot(deUKgas_m)  ## time series, trend, seasonality, random
+```
+
+Step 4. Test if a time series is stationary. If not...then make it stationary.
+
+Differencing is commonly used to make a time series stationary.
+
+```{r}
+# Seasonal Differencing
+ # number for seasonal differencing needed
+nsdiffs(UKgas) 
+```
+
+```{r}
+UKgas_seasdiff <- diff(UKgas, lag=frequency(UKgas), differences=1)  # seasonal differencing
+plot(UKgas_seasdiff, type="l", main="Seasonally Differenced")  # still not stationary!
+```
+
+```{r}
+## Test if the time series is stationary
+adf.test(UKgas_seasdiff)
+```
+
+p-value < 0.05 indicates the TS is stationary
+
+Step 5. Prediction...
+
+
+## Monthly Data: Airline Passenger Numbers
+
+Step 1. Check whether an object is a time series (is.ts()), and/or create time-series objects(ts()) if needed.
+
+```{r}
+data("AirPassengers")  ## AirPassengerss is available in base R 
+                       ## monthly data
+
+?AirPassengers  ## to see a description of the data, 
+                ## including start year and quarter
+
+is.ts(AirPassengers)
+```
+
+If *FALSE*:
+
+```{r eval=FALSE}
+AirP <- ts(AirPassengers, frequency = 12, start= c(1949,1))
+```
+
+
+```{r}
+AirPassengers
+```
+
+Step 2. Visualize the time series.
+
+```{r}
+plot(AirPassengers)
+# plot(AirPassengers, type="b", pch=20)
+```
+
+Step 3. Split the time series into seasonality, trend and error components.
+
+For Additive Time Series, Observed = Trend + Seasonal + Random.
+
+```{r fig.height=6}
+deAirPassengers_a <- decompose(AirPassengers, type="additive")
+plot(deAirPassengers_a)  ## time series, trend, seasonality, random
+```
+
+For Multiplicative Time Series, Observed = Trend $*$ Seasonal $*$ Random.
+
+```{r fig.height=6}
+deAirPassengers_m <- decompose(AirPassengers, type="mult")
+plot(deAirPassengers_m)  ## time series, trend, seasonality, random
+```
+
+
+
+## Reference
+
+More resources about de-trend and ways of prediction, etc.
+
+http://r-statistics.co/Time-Series-Analysis-With-R.html
+
+http://biostat.mc.vanderbilt.edu/wiki/pub/Main/ColeBeck/datestimes.pdf
+
+https://a-little-book-of-r-for-time-series.readthedocs.io/en/latest/src/timeseries.html
+
+https://www.analyticsvidhya.com/blog/2015/12/complete-tutorial-time-series-modeling/
+
+https://buildmedia.readthedocs.org/media/pdf/a-little-book-of-r-for-time-series/latest/a-little-book-of-r-for-time-series.pdf
+
+https://www.datacamp.com/community/tutorials/time-series-r
+
+https://cran.r-project.org/web/views/TimeSeries.html
+
+https://www.statmethods.net/advstats/timeseries.html
+
+https://www.timeanddate.com/time/aboututc.html
