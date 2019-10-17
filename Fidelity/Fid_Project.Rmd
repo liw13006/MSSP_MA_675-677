@@ -9,7 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot)
+pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot, ggvis)
 ``` 
 
 # Sector Fund
@@ -118,9 +118,9 @@ Also we can check the corrplot of the cor matrix.
 ```{r}
 colmat <- colorRampPalette(c("red", "white", "blue"))
 
-corrplot(cor(cordat,cordat),cl.lim = c(0.9,1.0),is.corr = FALSE,col = colmat(200),title = "NAV cor",type = "lower",tl.cex = .8)
+corrplot(cor(cordat,cordat),cl.lim = c(0.9,1.0),is.corr = FALSE,col = colmat(200),title = "NAV cor",type = "lower",tl.cex = .8,mar=c(1,1,2,1))
 
-corrplot(cor(DailyReturncor,DailyReturncor),cl.lim = c(0.6,1.0),is.corr = FALSE,col = colmat(100),title = "DailyReturn cor",type = "lower",tl.cex = .8)
+corrplot(cor(DailyReturncor,DailyReturncor),cl.lim = c(0.6,1.0),is.corr = FALSE,col = colmat(100),title = "DailyReturn cor",type = "lower",tl.cex = .8,mar=c(1,1,2,1))
 
 ```
 
