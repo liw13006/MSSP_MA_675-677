@@ -97,22 +97,31 @@ ggplot(VTSAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VTSAX"))+geo
 It seems that the Vanguard's ETF's are more correlated to the indexes. Another way to look at this is the correlation matrix:
 
 ```{r}
-cor(FSPTX$Close.z,NASDAQ$Close.z)
-cor(FSPTX$Close.z,RUSSELL2000$Close.z)
-cor(FSPTX$Close.z,SnPMID$Close.z)
-cor(FSPTX$Close.z,SnPSML$Close.z)
 cordat = cbind(FSPTX$Close.z,NASDAQ$Close.z,SnP500$Close.z,RUSSELL2000$Close.z,SnPMID$Close.z,SnPSML$Close.z,VGT$Close.z,VIGAX$Close.z,VTSAX$Close.z)
+DailyReturncor = cbind(FSPTX$dailyReturn,NASDAQ$dailyReturn,SnP500$dailyReturn,RUSSELL2000$dailyReturn,SnPMID$dailyReturn,SnPSML$dailyReturn,VGT$dailyReturn,VIGAX$dailyReturn,VTSAX$dailyReturn)
+colnames(DailyReturncor) = c("FSPTX","NASDAQ","SnP500","RUSSELL2000","SnPMID","SnPSML","VGT(IT ETF)","VIGAX(LargeCAP)","VTSAX(TotalMarket)")
+DailyReturncor = data.frame(DailyReturncor)
 colnames(cordat) = c("FSPTX","NASDAQ","SnP500","RUSSELL2000","SnPMID","SnPSML","VGT(IT ETF)","VIGAX(LargeCAP)","VTSAX(TotalMarket)")
 cordat = data.frame(cordat)
+print("Nav Correlation")
 cor(cordat,cordat)
 
 ```
+
+```{r}
+print("DailyReturn Correlation")
+cor(DailyReturncor,DailyReturncor)
+```
+
 Also we can check the corrplot of the cor matrix.
 
 ```{r}
 colmat <- colorRampPalette(c("red", "white", "blue"))
 
-corrplot(cor(cordat,cordat),cl.lim = c(0.9,1.0),is.corr = FALSE,col = colmat(200))
+corrplot(cor(cordat,cordat),cl.lim = c(0.9,1.0),is.corr = FALSE,col = colmat(200),title = "NAV cor",type = "lower",tl.cex = .8)
+
+corrplot(cor(DailyReturncor,DailyReturncor),cl.lim = c(0.6,1.0),is.corr = FALSE,col = colmat(100),title = "DailyReturn cor",type = "lower",tl.cex = .8)
+
 ```
 
 It seems that the Fidelity fund is not really matching the indexes we chose.   
