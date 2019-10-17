@@ -9,12 +9,12 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pacman::p_load(pracma,lubridate,tidyverse,dplyr)
+pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot)
 ``` 
 
 # Sector Fund
 
-For this project sector fund [Fidelity Select Technology Portfolio (FSPTX)](https://fundresearch.fidelity.com/mutual-funds/summary/316390202) is chosen as the target fund.     
+For this project sector fund [Fidelity Select Technology Portfolio (FSPTX)](https://fundresearch.fidelity.com/mutual-funds/summary/316390202) is chosen as the target fund. On Fidelity's website, this is categorized as: *Large Growth*
 
 For comparison, `Russel2000(^RUT)`, `NASDAQ(^IXIC)`, `S&P500(^GSPC)`, `S&PMidCap(^MID)` and `S&PSmlCap(^SML)` was selected as initial indexes to be campared with.
 
@@ -81,17 +81,17 @@ VTSAX = standardizedNAV(VTSAX)
 Plot the NAVs:
 
 ```{r}
-ggplot(FSPTX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "FSPTX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+ggplot(FSPTX)+ theme(legend.position="top")+geom_line(mapping = aes(x = Date,y = Close.z,color = "FSPTX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
 ```
 
 For comparison, plot Vanguard's fund too
 
 ```{r}
-ggplot(VGT)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VGT"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+ggplot(VGT)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VGT"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
 
-ggplot(VIGAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VIGAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+ggplot(VIGAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VIGAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
 
-ggplot(VTSAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VTSAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+ggplot(VTSAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VTSAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
 ```
 
 It seems that the Vanguard's ETF's are more correlated to the indexes. Another way to look at this is the correlation matrix:
@@ -105,6 +105,14 @@ cordat = cbind(FSPTX$Close.z,NASDAQ$Close.z,SnP500$Close.z,RUSSELL2000$Close.z,S
 colnames(cordat) = c("FSPTX","NASDAQ","SnP500","RUSSELL2000","SnPMID","SnPSML","VGT(IT ETF)","VIGAX(LargeCAP)","VTSAX(TotalMarket)")
 cordat = data.frame(cordat)
 cor(cordat,cordat)
+
+```
+Also we can check the corrplot of the cor matrix.
+
+```{r}
+colmat <- colorRampPalette(c("red", "white", "blue"))
+
+corrplot(cor(cordat,cordat),cl.lim = c(0.9,1.0),is.corr = FALSE,col = colmat(200))
 ```
 
 It seems that the Fidelity fund is not really matching the indexes we chose.   
@@ -126,17 +134,17 @@ RUSSELL2000 = getProjectionValue(RUSSELL2000)
 Plot them:
 
 ```{r}
-ggplot()+geom_line(mapping = aes(x = FSPTX$Date,y = FSPTX$ProjValper10k,color = 'FSPTX'))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$ProjValper10k,color = 'NASDAQ'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = SnP500$Date,y = SnP500$ProjValper10k,color = 'S&P500'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = VGT$Date,y = VGT$ProjValper10k,color = 'VGT(ITsecETF)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VIGAX$Date,y = VIGAX$ProjValper10k,color = 'VIGAX(LARGECAPGROWTH)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VTSAX$Date,y = VTSAX$ProjValper10k,color = 'VTSAX(TOTALSTOCK)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$ProjValper10k,color = 'S&PmidCAP'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$ProjValper10k,color = 'S&PsmlCAP'),size = 1,alpha = .2)+xlab("Date")+ylab("HypoGrowth of 10,000")
+ggplot()+geom_line(mapping = aes(x = FSPTX$Date,y = FSPTX$ProjValper10k,color = 'FSPTX'))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$ProjValper10k,color = 'NASDAQ'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = SnP500$Date,y = SnP500$ProjValper10k,color = 'S&P500'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = VGT$Date,y = VGT$ProjValper10k,color = 'VGT(ITsecETF)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VIGAX$Date,y = VIGAX$ProjValper10k,color = 'VIGAX(LARGECAPGROWTH)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VTSAX$Date,y = VTSAX$ProjValper10k,color = 'VTSAX(TOTALSTOCK)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$ProjValper10k,color = 'S&PmidCAP'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$ProjValper10k,color = 'S&PsmlCAP'),size = 1,alpha = .2)+xlab("Date")+ylab("HypoGrowth of 10,000")+ theme(legend.position="top")
 ```
 
 Still not a good fit...
 
 ---
 
-Below is just some misc works: Mainly exploring the daily return
+*Below is just some misc works: Mainly exploring the daily return*
 
 ```{r}
-## Check distance between lines
+## Check distance between projected returns
 print("pointwise variance between taget fund and NASDAQ")
 print(sqerr(FSPTX$ProjValper10k,NASDAQ$ProjValper10k))
 #ks.test()
