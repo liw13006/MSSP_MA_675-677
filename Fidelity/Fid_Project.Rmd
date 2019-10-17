@@ -1,11 +1,27 @@
-library(readr)
-pacman::p_load(pracma,lubridate)
-#FSPTX <- read_csv("FSPTX.csv")
-#NASDAQ <- read_csv("NASDAQ.csv")
-#SP500 <- read_csv("SP500^GSPC.csv")
-library(tidyverse)
-library(dplyr)
+---
+title: "Fidelity_Project"
+author: "Weiling Li"
+date: "10/17/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(pracma,lubridate,tidyverse,dplyr)
+``` 
+
+# Sector Fund
+
+For this project sector fund [Fidelity Select Technology Portfolio (FSPTX)](https://fundresearch.fidelity.com/mutual-funds/summary/316390202) is chosen as the target fund.     
+
+For comparison, `Russel2000(^RUT)`, `NASDAQ(^IXIC)`, `S&P500(^GSPC)`, `S&PMidCap(^MID)` and `S&PSmlCap(^SML)` was selected as initial indexes to be campared with.
+
+for comparison, Vanguard's similar index funds are also loaded as `IT ETF(VGT)`,`LargeCap ETF(VIGAX)` and `TotalMarket ETF(VTSAX)`
+
+Before loading data, we will define some useful function to ease the data cleaning process, and claim some variables 1st.
+```{r}
 ## this function requires a dataframe input that has the daily close price named:Closed and a date column named: Date with format as: floating point and "xxxx(year)-xx(month)-xx(day)"
 ## We trimmed the data from 1990-10-07 because 1990-10-08 is a Monday and Stock market closed during weekend
 dailynlogReturn <- function(Date1,DataFrame){
@@ -16,17 +32,27 @@ getProjectionValue <- function(DF){
   P0 = pull(filter(DF, Date == pull(top_n(DF["Date"],-1)))%>%select(Close))
   DF = mutate(DF,ProjValper10k = (Close*10000)/P0)
 }
-
+## Calculate Euclidean distances between two sets of data
 sqerr <- function(x,y){
   z = x - y
   z = sqrt(dot(z,z)/length(y))
   return(z)
 }
 
+## function for standarize NAV
 standardizedNAV = function(DF){
   return(mutate(DF,Close.z = (Close-mean(Close))/sd(Close)))
 }
+
+## restrict ourselves to study data after 2014-01-01
 StartDate = as.Date("2014-01-01")
+
+```
+
+## Load and clean the data, then some EDA
+Load the data:
+
+```{r,message = FALSE}
 FSPTX = dailynlogReturn(StartDate,read_csv("FSPTX.csv"))
 NASDAQ = dailynlogReturn(StartDate,read_csv("^IXIC.csv"))
 SnP500 = dailynlogReturn(StartDate,read_csv("^GSPC.csv"))
@@ -36,8 +62,11 @@ RUSSELL2000 = dailynlogReturn(StartDate,read_csv("^RUT.csv"))
 VGT = dailynlogReturn(StartDate,read_csv("VGT.csv"))
 VIGAX = dailynlogReturn(StartDate,read_csv("VIGAX.csv"))
 VTSAX = dailynlogReturn(StartDate,read_csv("VTSAX.csv"))
+```
 
-## Standardize NAV
+Standardize NAV
+
+```{r}
 FSPTX = standardizedNAV(FSPTX)
 NASDAQ = standardizedNAV(NASDAQ)
 SnP500 = standardizedNAV(SnP500)
@@ -47,12 +76,27 @@ RUSSELL2000 = standardizedNAV(RUSSELL2000)
 VGT = standardizedNAV(VGT)
 VIGAX = standardizedNAV(VIGAX)
 VTSAX = standardizedNAV(VTSAX)
+```
 
+Plot the NAVs:
 
-#DaysBeatNasdaq = FSPTX$dailyReturn-NASDAQ$dailyReturn
+```{r}
 ggplot(FSPTX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "FSPTX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+```
 
-## Check Correlation
+For comparison, plot Vanguard's fund too
+
+```{r}
+ggplot(VGT)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VGT"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+
+ggplot(VIGAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VIGAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+
+ggplot(VTSAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VTSAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+```
+
+It seems that the Vanguard's ETF's are more correlated to the indexes. Another way to look at this is the correlation matrix:
+
+```{r}
 cor(FSPTX$Close.z,NASDAQ$Close.z)
 cor(FSPTX$Close.z,RUSSELL2000$Close.z)
 cor(FSPTX$Close.z,SnPMID$Close.z)
@@ -61,11 +105,13 @@ cordat = cbind(FSPTX$Close.z,NASDAQ$Close.z,SnP500$Close.z,RUSSELL2000$Close.z,S
 colnames(cordat) = c("FSPTX","NASDAQ","SnP500","RUSSELL2000","SnPMID","SnPSML","VGT(IT ETF)","VIGAX(LargeCAP)","VTSAX(TotalMarket)")
 cordat = data.frame(cordat)
 cor(cordat,cordat)
-#pull(filter(FSPTX, Date == StartDate)%>%select(dailyReturn))
+```
 
+It seems that the Fidelity fund is not really matching the indexes we chose.   
 
-#Project future value
+Check the dailyreturn and project value
 
+```{r,message=FALSE}
 FSPTX = getProjectionValue(FSPTX)
 NASDAQ = getProjectionValue(NASDAQ)
 SnP500 = getProjectionValue(SnP500)
@@ -75,18 +121,21 @@ VTSAX = getProjectionValue(VTSAX)
 SnPMID = getProjectionValue(SnPMID)
 SnPSML = getProjectionValue(SnPSML)
 RUSSELL2000 = getProjectionValue(RUSSELL2000)
+```
 
-#P0 = pull(filter(FSPTX, Date == StartDate)%>%select(Close))
-#FSPTX = mutate(FSPTX,ProjValper10k = (Close*10000)/P0)
+Plot them:
 
-#P0 = pull(filter(NASDAQ, Date == StartDate)%>%select(Close))
-#NASDAQ = mutate(NASDAQ,ProjValper10k = (Close*10000)/P0)
-
-#length(DaysBeatNasdaq[DaysBeatNasdaq>0])/length(DaysBeatNasdaq)
-
-
+```{r}
 ggplot()+geom_line(mapping = aes(x = FSPTX$Date,y = FSPTX$ProjValper10k,color = 'FSPTX'))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$ProjValper10k,color = 'NASDAQ'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = SnP500$Date,y = SnP500$ProjValper10k,color = 'S&P500'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = VGT$Date,y = VGT$ProjValper10k,color = 'VGT(ITsecETF)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VIGAX$Date,y = VIGAX$ProjValper10k,color = 'VIGAX(LARGECAPGROWTH)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VTSAX$Date,y = VTSAX$ProjValper10k,color = 'VTSAX(TOTALSTOCK)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$ProjValper10k,color = 'S&PmidCAP'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$ProjValper10k,color = 'S&PsmlCAP'),size = 1,alpha = .2)+xlab("Date")+ylab("HypoGrowth of 10,000")
+```
 
+Still not a good fit...
+
+---
+
+Below is just some misc works: Mainly exploring the daily return
+
+```{r}
 ## Check distance between lines
 print("pointwise variance between taget fund and NASDAQ")
 print(sqerr(FSPTX$ProjValper10k,NASDAQ$ProjValper10k))
@@ -129,34 +178,5 @@ ggplot(dailyReturnComp)+aes(x = FSPTX,y = SnP500)+geom_point()+xlim(c(-0.15,0.15
 ggplot(dailyReturnComp)+aes(x = FSPTX,y = VGT)+geom_point()+xlim(c(-0.15,0.15))+ylim(c(-0.15,0.15))+geom_abline(intercept = 0.0,slope = 1.0)
 ggplot(dailyReturnComp)+aes(x = FSPTX,y = VIGAX)+geom_point()+xlim(c(-0.15,0.15))+ylim(c(-0.15,0.15))+geom_abline(intercept = 0.0,slope = 1.0)
 ggplot(dailyReturnComp)+aes(x = FSPTX,y = VTSAX)+geom_point()+xlim(c(-0.15,0.15))+ylim(c(-0.15,0.15))+geom_abline(intercept = 0.0,slope = 1.0)
+```
 
-
-#as.integer(as.Date("2010-10-04"))
-
-getTS = function(DF){
-  tsFSPTX = select(DF,Date,ProjValper10k)%>%drop_na()
-  tsFSPTX1 = ts(tsFSPTX,frequency = 1)
-}
-#%>%column_to_rownames(var = "Date")
-tsFSPTX1 = getTS(FSPTX)
-d_tsFSPTX = decompose(tsFSPTX1)
-tsNASDAQ = getTS(NASDAQ)
-plot(tsFSPTX1)
-plot(tsNASDAQ)
-ts.plot(tsFSPTX1, tsNASDAQ, gpars = list(col = c("black", "red")))
-
-selectDate = function(DF,startdate,enddate){
-  DF = select(DF,Date,Close.z)%>%filter(Date>=startdate,Date<=enddate)
-  return(DF)
-}
-
-adequateTStable = function(DF){
-  
-}
-for (i in 2014:2018){
-  date1 = as.Date(paste0(toString(i),"-01-01"))
-  date2 = as.Date(paste0(toString(i),"-12-31"))
-  #print(date1)
-  #print(date2)
-  
-}
