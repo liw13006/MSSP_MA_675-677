@@ -9,7 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot, ggvis)
+pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot, ggvis,plotly)
 ``` 
 
 # Sector Fund
@@ -81,17 +81,16 @@ VTSAX = standardizedNAV(VTSAX)
 Plot the NAVs:
 
 ```{r}
-ggplot(FSPTX)+ theme(legend.position="top")+geom_line(mapping = aes(x = Date,y = Close.z,color = "FSPTX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")
+plotly_build(ggplot(FSPTX)+ theme(legend.position="top")+geom_line(mapping = aes(x = Date,y = Close.z,color = "FSPTX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnP500$Date,y = SnP500$Close.z,color = "S&P 500"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+geom_line(mapping = aes(x = VGT$Date,y = VGT$Close.z,color = "IT ETF"),alpha = .4)+geom_line(mapping = aes(x = VTSAX$Date,y = VTSAX$Close.z,color = "TotalMarket ETF"),alpha = .4)+geom_line(mapping = aes(x = VIGAX$Date,y = VIGAX$Close.z,color = "LargeCap ETF"),alpha = .4)+ylab("standardized NAV"))%>%
+  layout(legend = list(orientation = 'h',x = 0.1, y = 1.4))
 ```
 
-For comparison, plot Vanguard's fund too
-
 ```{r}
-ggplot(VGT)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VGT"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
+#ggplot(VGT)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VGT"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
 
-ggplot(VIGAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VIGAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
+#ggplot(VIGAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VIGAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
 
-ggplot(VTSAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VTSAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
+#ggplot(VTSAX)+geom_line(mapping = aes(x = Date,y = Close.z,color = "VTSAX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+ylab("standardized NAV")+ theme(legend.position="top")
 ```
 
 It seems that the Vanguard's ETF's are more correlated to the indexes. Another way to look at this is the correlation matrix:
@@ -185,7 +184,7 @@ print("Average ratio of dailyReturn(FSPTX/NASDAQ")
 print(sum(sqrt(dailyReturnComp$vsVTSAX*dailyReturnComp$vsVTSAX)/length(dailyReturnComp$vsVTSAX)))
 
 dailyReturnSTD = select(dailyReturnComp,contains("minus"))%>%summarise_all(funs(sd))
-ggplot(dailyReturnComp)+aes(x = Date,y = minusNASDAQ)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE)
+plotly_build(ggplot(dailyReturnComp)+aes(x = Date,y = minusNASDAQ)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE))
 ggplot(dailyReturnComp)+aes(x = Date,y = minusSnP500)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE)
 ggplot(dailyReturnComp)+aes(x = Date,y = minusVGT)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE)
 ggplot(dailyReturnComp)+aes(x = Date,y = minusVIGAX)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE)
