@@ -82,7 +82,7 @@ Plot the NAVs:
 
 ```{r}
 plotly_build(ggplot(FSPTX)+ theme(legend.position="top")+geom_line(mapping = aes(x = Date,y = Close.z,color = "FSPTX"))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$Close.z,color = "NASDAQ"),alpha = .4)+geom_line(mapping = aes(x = SnP500$Date,y = SnP500$Close.z,color = "S&P 500"),alpha = .4)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$Close.z,color = "S&PmidCAP"),alpha = .4)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$Close.z,color = "S&PsmlCAP"),alpha = .4)+geom_line(mapping = aes(x = RUSSELL2000$Date,y = RUSSELL2000$Close.z,color = "Russell2000"),alpha = .4)+geom_line(mapping = aes(x = VGT$Date,y = VGT$Close.z,color = "IT ETF"),alpha = .4)+geom_line(mapping = aes(x = VTSAX$Date,y = VTSAX$Close.z,color = "TotalMarket ETF"),alpha = .4)+geom_line(mapping = aes(x = VIGAX$Date,y = VIGAX$Close.z,color = "LargeCap ETF"),alpha = .4)+ylab("standardized NAV"))%>%
-  layout(legend = list(orientation = 'h',x = 0.1, y = 1.4))
+  layout(legend = list(orientation = 'h',x = 0.1, y = 1.2))
 ```
 
 ```{r}
