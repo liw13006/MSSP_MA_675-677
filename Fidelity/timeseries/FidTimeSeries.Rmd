@@ -1,0 +1,25 @@
+---
+title: "Time Series Notes"
+output: html_notebook
+---
+## Question
+
+Reconcile from yesterday's nav to today's price.
+
+## Goal
+
+List of goals:
+
+* Which index fits better, or which indexes.
+* What combination of indexes fit best.
+  + Just fit linear regression TRY!
+  + Fit daily returns.
+
+
+## Rieman Models
+
+```{r, include = TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse,forecast)
+```
+

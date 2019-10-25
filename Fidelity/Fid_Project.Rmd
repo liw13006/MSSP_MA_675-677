@@ -142,7 +142,8 @@ RUSSELL2000 = getProjectionValue(RUSSELL2000)
 Plot them:
 
 ```{r}
-ggplot()+geom_line(mapping = aes(x = FSPTX$Date,y = FSPTX$ProjValper10k,color = 'FSPTX'))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$ProjValper10k,color = 'NASDAQ'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = SnP500$Date,y = SnP500$ProjValper10k,color = 'S&P500'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = VGT$Date,y = VGT$ProjValper10k,color = 'VGT(ITsecETF)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VIGAX$Date,y = VIGAX$ProjValper10k,color = 'VIGAX(LARGECAPGROWTH)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VTSAX$Date,y = VTSAX$ProjValper10k,color = 'VTSAX(TOTALSTOCK)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$ProjValper10k,color = 'S&PmidCAP'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$ProjValper10k,color = 'S&PsmlCAP'),size = 1,alpha = .2)+xlab("Date")+ylab("HypoGrowth of 10,000")+ theme(legend.position="top")
+plotly_build(ggplot()+geom_line(mapping = aes(x = FSPTX$Date,y = FSPTX$ProjValper10k,color = 'FSPTX'))+geom_line(mapping = aes(x = NASDAQ$Date,y = NASDAQ$ProjValper10k,color = 'NASDAQ'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = SnP500$Date,y = SnP500$ProjValper10k,color = 'S&P500'),size = 1.5,alpha = .6)+geom_line(mapping = aes(x = VGT$Date,y = VGT$ProjValper10k,color = 'VGT(ITsecETF)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VIGAX$Date,y = VIGAX$ProjValper10k,color = 'VIGAX(LARGECAPGROWTH)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = VTSAX$Date,y = VTSAX$ProjValper10k,color = 'VTSAX(TOTALSTOCK)'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPMID$Date,y = SnPMID$ProjValper10k,color = 'S&PmidCAP'),size = 1,alpha = .2)+geom_line(mapping = aes(x = SnPSML$Date,y = SnPSML$ProjValper10k,color = 'S&PsmlCAP'),size = 1,alpha = .2)+xlab("Date")+ylab("HypoGrowth of 10,000")+ theme(legend.position="top"))%>%
+  layout(legend = list(orientation = 'h',x = 0.1, y = 1.5))
 ```
 
 Still not a good fit...
@@ -184,10 +185,26 @@ print("Average ratio of dailyReturn(FSPTX/NASDAQ")
 print(sum(sqrt(dailyReturnComp$vsVTSAX*dailyReturnComp$vsVTSAX)/length(dailyReturnComp$vsVTSAX)))
 
 dailyReturnSTD = select(dailyReturnComp,contains("minus"))%>%summarise_all(funs(sd))
-plotly_build(ggplot(dailyReturnComp)+aes(x = Date,y = minusNASDAQ)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE))
-ggplot(dailyReturnComp)+aes(x = Date,y = minusSnP500)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE)
-ggplot(dailyReturnComp)+aes(x = Date,y = minusVGT)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE)
-ggplot(dailyReturnComp)+aes(x = Date,y = minusVIGAX)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE)
+
+plotly_build(ggplot(dailyReturnComp)+
+               aes(x = Date,y = minusNASDAQ)+geom_point(alpha = .1)+
+               geom_smooth(method = "loess",se = TRUE))
+
+ggplot(dailyReturnComp)+
+  aes(x = Date,y = minusSnP500)+geom_point(alpha = .1)+
+  geom_smooth(method = "loess",se = TRUE)
+
+ggplot(dailyReturnComp)+
+  aes(x = Date,y = minusVGT)+
+  geom_point(alpha = .1)+
+  geom_smooth(method = "loess",se = TRUE)
+
+ggplot(dailyReturnComp)+
+  aes(x = Date,y = minusVIGAX)+
+  geom_point(alpha = .1)+
+  geom_smooth(method = "loess",se = TRUE)
+
+
 ggplot(dailyReturnComp)+aes(x = Date,y = minusVTSAX)+geom_point(alpha = .1)+geom_smooth(method = "loess",se = TRUE)
 ggplot(dailyReturnComp)+aes(x = FSPTX,y = NASDAQ)+geom_point()+xlim(c(-0.15,0.15))+ylim(c(-0.15,0.15))+geom_abline(intercept = 0.0,slope = 1.0)
 ggplot(dailyReturnComp)+aes(x = FSPTX,y = SnP500)+geom_point()+xlim(c(-0.15,0.15))+ylim(c(-0.15,0.15))+geom_abline(intercept = 0.0,slope = 1.0)
