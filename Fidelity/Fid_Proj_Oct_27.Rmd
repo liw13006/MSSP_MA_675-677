@@ -289,9 +289,9 @@ ggplot(regressiontable)+aes(x = composit, y = direction)+geom_point()
 directionmodel <- glm(data = regressiontable, direction~composit,family = binomial(link = "logit"))
 summary(directionmodel)
 
-#fitted.y = fitted(directionmodel); observed.y= regressiontable$direction
-#perf<- ROCR::performance(ROCR::prediction(fitted.y,observed.y) ,"tpr","fpr")
-#ROCR::plot(perf); abline(0,1,lty=2)
+fitted.y = fitted(directionmodel); observed.y= regressiontable$direction
+perf<- ROCR::performance(ROCR::prediction(fitted.y,observed.y) ,"tpr","fpr")
+ROCR::plot(perf); abline(0,1,lty=2)
 
 binnedplot(predict(directionmodel),resid(directionmodel))
 
