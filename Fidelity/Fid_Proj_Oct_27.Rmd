@@ -105,6 +105,18 @@ VIGAX  <- VIGAX%>%dplyr::filter(!Date %in% DividenDates)
 VTSAX  <- VTSAX%>%dplyr::filter(!Date %in% DividenDates)
 SnP500Info <- SnP500Info%>%dplyr::filter(!Date %in% DividenDates)
 SnPNATech <- SnPNATech%>%dplyr::filter(!Date %in% DividenDates)
+
+
+NASDAQ1 <- NASDAQ%>%dplyr::mutate(log.Close.adj = log(`Adj Close`),
+                     log.Return.adj = log.Close.adj - lag(log.Close.adj))
+
+FSPTX1 <- FSPTX%>%dplyr::mutate(log.Close.adj = log(`Adj Close`),
+                     log.Return.adj = log.Close.adj - lag(log.Close.adj))
+
+ytest <- FSPTX1$log.Return.adj-NASDAQ1$log.Return.adj
+plotly::plotly_build(ggplot(FSPTX1)+
+               aes(x = Date,y = ytest)+geom_point(alpha = .1)+
+               geom_smooth(method = "loess",se = TRUE))
 ```
 ## Check Correlation Map of log return
 
