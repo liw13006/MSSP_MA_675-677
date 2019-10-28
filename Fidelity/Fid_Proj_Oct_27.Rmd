@@ -1,0 +1,72 @@
+---
+title: "Fid Project"
+author: "Weiling Li"
+date: "10/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot, ggvis,plotly,readr)
+``` 
+
+# Sector Fund
+
+For this project sector fund [Fidelity Select Technology Portfolio (FSPTX)](https://fundresearch.fidelity.com/mutual-funds/summary/316390202) is chosen as the target fund. On Fidelity's website, this is categorized as: *Large Growth*
+
+For comparison, `Russel2000(^RUT)`, `NASDAQ(^IXIC)`, `S&P500(^GSPC)`,`S&P500ITsector()`,`S&PNorthAmericaTechSector` `S&PMidCap(^MID)` and `S&PSmlCap(^SML)` was selected as initial indexes to be campared with.
+
+for comparison, Vanguard's similar index funds are also loaded as `IT ETF(VGT)`,`LargeCap ETF(VIGAX)` and `TotalMarket ETF(VTSAX)`
+
+Before loading data, we will define some useful function to ease the data cleaning process, and claim some variables 1st.
+```{r}
+## this function requires a dataframe input that has the daily close price named:Closed and a date column named: Date with format as: floating point and "xxxx(year)-xx(month)-xx(day)"
+## We trimmed the data from 1990-10-07 because 1990-10-08 is a Monday and Stock market closed during weekend
+dailynlogReturn <- function(Date1,DataFrame){
+  DataFrame = mutate(DataFrame, 
+                     dailyReturn = (Close-lag(Close))/Close,
+                     log.Close = log(Close),
+                     log.Return = log.Close-lag(log.Close))%>%
+    mutate(perc_dailyRe = round(dailyReturn*100.0,3))%>%
+    filter(Date >= Date1)%>%
+    filter(Date <= as.Date("2018-12-31"))
+}
+## This function returns a projection value of the fund from the start date and assuming 10k investment from the start and reinvest all earnings
+getProjectionValue <- function(DF){
+  P0 = pull(filter(DF, Date == pull(top_n(DF["Date"],-1)))%>%select(Close))
+  DF = mutate(DF,ProjValper10k = (Close*10000)/P0)
+}
+## Calculate Euclidean distances between two sets of data
+sqerr <- function(x,y){
+  z = x - y
+  z = sqrt(dot(z,z)/length(y))
+  return(z)
+}
+
+## function for standarize NAV
+standardizedNAV = function(DF){
+  return(mutate(DF,Close.z = (Close-mean(Close))/sd(Close)))
+}
+
+## restrict ourselves to study data after 2014-01-01
+StartDate = as.Date("2014-01-01")
+
+```
+
+## Load and clean the data, then some EDA
+Load the data:
+
+```{r,message = FALSE}
+FSPTX = dailynlogReturn(StartDate,read_csv("FSPTX.csv"))
+NASDAQ = dailynlogReturn(StartDate,read_csv("^IXIC.csv"))
+SnP500 = dailynlogReturn(StartDate,read_csv("^GSPC.csv"))
+SnPMID = dailynlogReturn(StartDate,read_csv("^MID.csv"))
+SnPSML = dailynlogReturn(StartDate,read_csv("^SML.csv"))
+RUSSELL2000 = dailynlogReturn(StartDate,read_csv("^RUT.csv"))
+VGT = dailynlogReturn(StartDate,read_csv("VGT.csv"))
+VIGAX = dailynlogReturn(StartDate,read_csv("VIGAX.csv"))
+VTSAX = dailynlogReturn(StartDate,read_csv("VTSAX.csv"))
+
+SnP500Info <- dailynlogReturn(StartDate,read_csv("SnP500Info.csv"))
+SnPNATech <- dailynlogReturn(StartDate,read_csv("SnPNATECH_clean.csv"))
+```
