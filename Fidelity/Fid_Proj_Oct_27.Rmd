@@ -300,6 +300,9 @@ print("average percentage of fund moving with composit")
 directionvscomposit[2,2]%>%pull()/apply(directionvscomposit,FUN = sum,2)[2]
 print("correlation of composit index")
 cor(predict(directionmodel),regressiontable$composit)
-plotly::plotly_build(ggplot(regressiontable)+aes(x = FSPTX-composit)+geom_histogram(bins = 70,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit"))
+
+plotly::plotly_build(ggplot(regressiontable%>%dplyr::filter(direction == 1))+aes(x = FSPTX-composit)+geom_histogram(bins = 30,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit, when same direction"))
+
+plotly::plotly_build(ggplot(regressiontable%>%dplyr::filter(direction == 0))+aes(x = FSPTX-composit)+geom_histogram(bins = 30,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit, when different direction"))
 ```
 
