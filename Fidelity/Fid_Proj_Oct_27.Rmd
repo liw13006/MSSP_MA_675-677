@@ -172,6 +172,106 @@ plotly::plotly_build(ggplot(logreturnmodel)+
   ylab("Standardized Residuals")+
   xlab("Theoretical")+
   ggtitle("QQnorm Plot"))
+
+logreturnmodel1 <- lm(FSPTX$log.Return~ SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return)
+
+summary(logreturnmodel1)
+
+#NASDAQ$log.Return + SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return -
+
+  
+plotly::plotly_build(ggplot(logreturnmodel1)+
+  aes(x = .fitted,y = .stdresid)+geom_point()+
+  geom_abline(intercept = 2.0,slope = 0.0, linetype = "dashed")+
+  geom_abline(intercept = -2.0,slope = 0.0, linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Fitted Values")+
+  ggtitle("Standardized Residual Plot"))
+  
+
+#plot(logreturnmodel,which = 2)
+
+plotly::plotly_build(ggplot(logreturnmodel1)+
+  aes(sample = .stdresid)+
+  stat_qq() + stat_qq_line(linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Theoretical")+
+  ggtitle("QQnorm Plot"))
+
+logreturnmodel2 <- lm(FSPTX$log.Return~ SnPNATech$log.Return+VGT$log.Return)
+
+summary(logreturnmodel2)
+
+#NASDAQ$log.Return + SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return -
+
+  
+plotly::plotly_build(ggplot(logreturnmodel2)+
+  aes(x = .fitted,y = .stdresid)+geom_point()+
+  geom_abline(intercept = 2.0,slope = 0.0, linetype = "dashed")+
+  geom_abline(intercept = -2.0,slope = 0.0, linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Fitted Values")+
+  ggtitle("Standardized Residual Plot"))
+  
+
+#plot(logreturnmodel,which = 2)
+
+plotly::plotly_build(ggplot(logreturnmodel2)+
+  aes(sample = .stdresid)+
+  stat_qq() + stat_qq_line(linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Theoretical")+
+  ggtitle("QQnorm Plot"))
+
+logreturnmodel3 <- lm(FSPTX$log.Return~+ SnPNATech$log.Return)
+
+summary(logreturnmodel3)
+
+#NASDAQ$log.Return + SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return -
+
+  
+plotly::plotly_build(ggplot(logreturnmodel3)+
+  aes(x = .fitted,y = .stdresid)+geom_point()+
+  geom_abline(intercept = 2.0,slope = 0.0, linetype = "dashed")+
+  geom_abline(intercept = -2.0,slope = 0.0, linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Fitted Values")+
+  ggtitle("Standardized Residual Plot"))
+  
+
+#plot(logreturnmodel,which = 2)
+
+plotly::plotly_build(ggplot(logreturnmodel3)+
+  aes(sample = .stdresid)+
+  stat_qq() + stat_qq_line(linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Theoretical")+
+  ggtitle("QQnorm Plot"))
+
+logreturnmodel4 <- lm(FSPTX$log.Return~ VGT$log.Return)
+
+summary(logreturnmodel4)
+
+#NASDAQ$log.Return + SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return -
+
+  
+plotly::plotly_build(ggplot(logreturnmodel4)+
+  aes(x = .fitted,y = .stdresid)+geom_point()+
+  geom_abline(intercept = 2.0,slope = 0.0, linetype = "dashed")+
+  geom_abline(intercept = -2.0,slope = 0.0, linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Fitted Values")+
+  ggtitle("Standardized Residual Plot"))
+  
+
+#plot(logreturnmodel,which = 2)
+
+plotly::plotly_build(ggplot(logreturnmodel4)+
+  aes(sample = .stdresid)+
+  stat_qq() + stat_qq_line(linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Theoretical")+
+  ggtitle("QQnorm Plot"))
 ```
 
 Save the predicted value as the index composit
@@ -196,9 +296,10 @@ summary(directionmodel)
 binnedplot(predict(directionmodel),resid(directionmodel))
 
 directionvscomposit <- regressiontable%>%dplyr::group_by(direction)%>%dplyr::summarise(counts = n())
-
+print("average percentage of fund moving with composit")
 directionvscomposit[2,2]%>%pull()/apply(directionvscomposit,FUN = sum,2)[2]
-
+print("correlation of composit index")
+cor(predict(directionmodel),regressiontable$composit)
 plotly::plotly_build(ggplot(regressiontable)+aes(x = FSPTX-composit)+geom_histogram(bins = 70,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit"))
 ```
 
