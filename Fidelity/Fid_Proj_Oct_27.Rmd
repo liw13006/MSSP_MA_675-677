@@ -2,21 +2,23 @@
 title: "Fid Project"
 author: "Weiling Li"
 date: "10/27/2019"
-output: html_document
+output: 
+  html_document: 
+    df_print: "paged"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot, ggvis,plotly,readr)
+pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot,readr,arm)
 ``` 
 
 # Sector Fund
 
 For this project sector fund [Fidelity Select Technology Portfolio (FSPTX)](https://fundresearch.fidelity.com/mutual-funds/summary/316390202) is chosen as the target fund. On Fidelity's website, this is categorized as: *Large Growth*
 
-For comparison, `Russel2000(^RUT)`, `NASDAQ(^IXIC)`, `S&P500(^GSPC)`,`S&P500ITsector()`,`S&PNorthAmericaTechSector` `S&PMidCap(^MID)` and `S&PSmlCap(^SML)` was selected as initial indexes to be campared with.
+For comparison, `Russel2000(^RUT)`, `NASDAQ(^IXIC)`, `S&P500(^GSPC)`,`S&P500ITsector`,`S&PNorthAmericaTechSector` `S&PMidCap(^MID)` and `S&PSmlCap(^SML)` was selected as initial indexes to be campared with.
 
-for comparison, Vanguard's similar index funds are also loaded as `IT ETF(VGT)`,`LargeCap ETF(VIGAX)` and `TotalMarket ETF(VTSAX)`
+for comparison, Vanguard's similar index funds are also loaded as `IT ETF(VGT)`,`LargeCap ETF(VIGAX)` and `TotalMarket ETF(VTSAX)`. In these ETFs `VGT` serves as [MSCI US IM Info. Tech. 25/50](https://investor.vanguard.com/etf/profile/VGT), `VIGAX` as [CRSP US Large Cap Growth Index and](https://investor.vanguard.com/mutual-funds/profile/VIGAX) `VTSAX` serves as[CRSP US Total Market Index](https://investor.vanguard.com/mutual-funds/profile/vtsax).
 
 Before loading data, we will define some useful function to ease the data cleaning process, and claim some variables 1st.
 ```{r}
@@ -53,7 +55,8 @@ StartDate = as.Date("2014-01-01")
 
 ```
 
-## Load and clean the data, then some EDA
+## Load and clean the data.
+
 Load the data:
 
 ```{r,message = FALSE}
@@ -66,7 +69,129 @@ RUSSELL2000 = dailynlogReturn(StartDate,read_csv("^RUT.csv"))
 VGT = dailynlogReturn(StartDate,read_csv("VGT.csv"))
 VIGAX = dailynlogReturn(StartDate,read_csv("VIGAX.csv"))
 VTSAX = dailynlogReturn(StartDate,read_csv("VTSAX.csv"))
-
 SnP500Info <- dailynlogReturn(StartDate,read_csv("SnP500Info.csv"))
 SnPNATech <- dailynlogReturn(StartDate,read_csv("SnPNATECH_clean.csv"))
 ```
+
+## Pick Dates where tax and dividen happens
+
+Check DailyReturn Anormlies and set them to NA value
+
+
+```{r}
+## Compare daily returns
+dailyReturnComp = cbind(as.Date(FSPTX$Date),FSPTX$dailyReturn,NASDAQ$dailyReturn,SnP500$dailyReturn,VGT$dailyReturn,VIGAX$dailyReturn,VTSAX$dailyReturn)
+colnames(dailyReturnComp) = c("Date","FSPTX","NASDAQ","SnP500","VGT","VIGAX","VTSAX")
+epsilon = 0.000000000000000001
+dailyReturnComp = data.frame(dailyReturnComp)%>%mutate(Date = as_date(Date),vsNASDAQ = ifelse(NASDAQ*NASDAQ<=epsilon,FSPTX,FSPTX/NASDAQ),vsSnP500 = ifelse(SnP500*SnP500<=epsilon,FSPTX,FSPTX/SnP500),vsVGT = ifelse(VGT*VGT<=epsilon,FSPTX,FSPTX/VGT),vsVIGAX = ifelse(VIGAX*VIGAX<=epsilon,FSPTX,FSPTX/VIGAX),vsVTSAX = ifelse(VTSAX*VTSAX<=epsilon,FSPTX,FSPTX/VTSAX))%>%mutate(minusNASDAQ = FSPTX-NASDAQ,minusSnP500 = FSPTX-SnP500,minusVGT = FSPTX-VGT,minusVIGAX= FSPTX-VIGAX,minusVTSAX = FSPTX-VTSAX)
+
+plotly::plotly_build(ggplot(dailyReturnComp)+
+               aes(x = Date,y = minusNASDAQ)+geom_point(alpha = .1)+
+               geom_smooth(method = "loess",se = TRUE))
+
+ 
+DividenDates <- dailyReturnComp%>%dplyr::filter(minusNASDAQ < -0.025)%>%dplyr::select(Date)%>%pull()
+
+
+
+FSPTX <-  FSPTX%>%dplyr::filter(!Date %in% DividenDates)
+NASDAQ  <- NASDAQ%>%dplyr::filter(!Date %in% DividenDates)
+SnP500  <- SnP500%>%dplyr::filter(!Date %in% DividenDates)
+SnPMID <- SnPMID%>%dplyr::filter(!Date %in% DividenDates)
+SnPSML  <- SnPSML%>%dplyr::filter(!Date %in% DividenDates)
+RUSSELL2000  <- RUSSELL2000%>%dplyr::filter(!Date %in% DividenDates)
+VGT  <- VGT%>%dplyr::filter(!Date %in% DividenDates)
+VIGAX  <- VIGAX%>%dplyr::filter(!Date %in% DividenDates)
+VTSAX  <- VTSAX%>%dplyr::filter(!Date %in% DividenDates)
+SnP500Info <- SnP500Info%>%dplyr::filter(!Date %in% DividenDates)
+SnPNATech <- SnPNATech%>%dplyr::filter(!Date %in% DividenDates)
+```
+## Check Correlation Map of log return
+
+```{r}
+DailyReturncor = cbind(FSPTX$log.Return,
+                       NASDAQ$log.Return,
+                       RUSSELL2000$log.Return,
+                       SnP500$log.Return,
+                       SnP500Info$log.Return,
+                       SnPNATech$log.Return,
+                       SnPMID$log.Return,
+                       SnPSML$log.Return,
+                       VGT$log.Return,
+                       VIGAX$log.Return,
+                       VTSAX$log.Return)
+
+colnames(DailyReturncor) = c("FSPTX",
+                             "NASDAQ",
+                             "RUSSELL2000",
+                             "SnP500",
+                             "SnP500Info",
+                             "SnPNATech",
+                             "SnPMID",
+                             "SnPSML",
+                             "VGT(IT ETF)",
+                             "VIGAX(LargeCAP)",
+                             "VTSAX(TotalMarket)")
+
+DailyReturncor = data.frame(DailyReturncor)
+
+#print("DailyReturn Correlation")
+#cor(DailyReturncor,DailyReturncor)
+
+colmat <- colorRampPalette(c("red", "white", "blue"))
+corrplot::corrplot(cor(DailyReturncor,DailyReturncor),cl.lim = c(0.6,1.0),is.corr = FALSE,col = colmat(100),title = "Daily Log Return cor",type = "lower",tl.cex = .8,mar=c(1,1,2,1))
+logreturncor <- data.frame(cor(DailyReturncor,DailyReturncor))
+logreturncor%>%dplyr::select(1)
+```
+The best matches according to daily log return is: `SnPNATech`,`SnP500Info` and `NASDAQ`. Besides, `VGT.IT.ETF` also is highly correlated in terms of daily log return.
+
+## Try linear regression on log returns
+
+```{r}
+logreturnmodel <- lm(FSPTX$log.Return~NASDAQ$log.Return + SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return - 1)
+
+summary(logreturnmodel)
+
+plotly::plotly_build(ggplot(logreturnmodel)+
+  aes(x = .fitted,y = .stdresid)+geom_point()+
+  geom_abline(intercept = 2.0,slope = 0.0, linetype = "dashed")+
+  geom_abline(intercept = -2.0,slope = 0.0, linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Fitted Values")+
+  ggtitle("Standardized Residual Plot"))
+  
+
+#plot(logreturnmodel,which = 2)
+
+plotly::plotly_build(ggplot(logreturnmodel)+
+  aes(sample = .stdresid)+
+  stat_qq() + stat_qq_line(linetype = "dashed")+
+  ylab("Standardized Residuals")+
+  xlab("Theoretical")+
+  ggtitle("QQnorm Plot"))
+```
+
+Save the predicted value as the index composit
+
+```{r}
+regressiontable <- cbind(as.character.Date(FSPTX$Date),as.numeric(FSPTX$log.Return),as.numeric(logreturnmodel$fitted.values))
+colnames(regressiontable) <- c("Date","FSPTX","composit")
+regressiontable <- data.frame(regressiontable)
+regressiontable <- regressiontable%>%mutate(Date = as.Date(Date),FSPTX = as.numeric(as.character(FSPTX)),composit = as.numeric(as.character(composit)))
+
+regressiontable <-regressiontable%>%mutate(direction = if_else(FSPTX*composit > 0, 1, 0))
+
+ggplot(regressiontable)+aes(x = composit, y = direction)+geom_point()
+
+directionmodel <- glm(data = regressiontable, direction~composit,family = binomial(link = "logit"))
+summary(directionmodel)
+
+fitted.y = fitted(directionmodel); observed.y= regressiontable$direction
+perf<- ROCR::performance(ROCR::prediction(fitted.y,observed.y) ,"tpr","fpr")
+ROCR::plot(perf); abline(0,1,lty=2)
+
+binnedplot(predict(directionmodel),resid(directionmodel))
+
+plotly::plotly_build(ggplot(regressiontable)+aes(x = FSPTX-composit)+geom_histogram(bins = 70,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit"))
+```
+
