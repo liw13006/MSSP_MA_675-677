@@ -148,10 +148,13 @@ The best matches according to daily log return is: `SnPNATech`,`SnP500Info` and 
 ## Try linear regression on log returns
 
 ```{r}
-logreturnmodel <- lm(FSPTX$log.Return~NASDAQ$log.Return + SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return - 1)
+logreturnmodel <- lm(FSPTX$log.Return~ NASDAQ$log.Return + SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return)
 
 summary(logreturnmodel)
 
+#NASDAQ$log.Return + SnP500Info$log.Return + SnPNATech$log.Return+VGT$log.Return -
+
+  
 plotly::plotly_build(ggplot(logreturnmodel)+
   aes(x = .fitted,y = .stdresid)+geom_point()+
   geom_abline(intercept = 2.0,slope = 0.0, linetype = "dashed")+
@@ -186,11 +189,15 @@ ggplot(regressiontable)+aes(x = composit, y = direction)+geom_point()
 directionmodel <- glm(data = regressiontable, direction~composit,family = binomial(link = "logit"))
 summary(directionmodel)
 
-fitted.y = fitted(directionmodel); observed.y= regressiontable$direction
-perf<- ROCR::performance(ROCR::prediction(fitted.y,observed.y) ,"tpr","fpr")
-ROCR::plot(perf); abline(0,1,lty=2)
+#fitted.y = fitted(directionmodel); observed.y= regressiontable$direction
+#perf<- ROCR::performance(ROCR::prediction(fitted.y,observed.y) ,"tpr","fpr")
+#ROCR::plot(perf); abline(0,1,lty=2)
 
 binnedplot(predict(directionmodel),resid(directionmodel))
+
+directionvscomposit <- regressiontable%>%dplyr::group_by(direction)%>%dplyr::summarise(counts = n())
+
+directionvscomposit[2,2]%>%pull()/apply(directionvscomposit,FUN = sum,2)[2]
 
 plotly::plotly_build(ggplot(regressiontable)+aes(x = FSPTX-composit)+geom_histogram(bins = 70,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit"))
 ```
