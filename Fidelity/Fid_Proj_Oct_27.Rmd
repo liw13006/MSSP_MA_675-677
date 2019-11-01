@@ -89,6 +89,15 @@ plotly::plotly_build(ggplot(dailyReturnComp)+
                aes(x = Date,y = minusNASDAQ)+geom_point(alpha = .1)+
                geom_smooth(method = "loess",se = TRUE))
 
+NASDAQ1 <- NASDAQ%>%dplyr::mutate(log.Close.adj = log(`Adj Close`),
+                     log.Return.adj = log.Close.adj - lag(log.Close.adj))
+
+FSPTX1 <- FSPTX%>%dplyr::mutate(log.Close.adj = log(`Adj Close`),
+                     log.Return.adj = log.Close.adj - lag(log.Close.adj))
+ytest <- FSPTX1$log.Return.adj-NASDAQ1$log.Return.adj
+plotly::plotly_build(ggplot(FSPTX1)+
+               aes(x = Date,y = ytest)+geom_point(alpha = .1)+
+               geom_smooth(method = "loess",se = TRUE))
  
 DividenDates <- dailyReturnComp%>%dplyr::filter(minusNASDAQ < -0.025)%>%dplyr::select(Date)%>%pull()
 
@@ -107,16 +116,9 @@ SnP500Info <- SnP500Info%>%dplyr::filter(!Date %in% DividenDates)
 SnPNATech <- SnPNATech%>%dplyr::filter(!Date %in% DividenDates)
 
 
-NASDAQ1 <- NASDAQ%>%dplyr::mutate(log.Close.adj = log(`Adj Close`),
-                     log.Return.adj = log.Close.adj - lag(log.Close.adj))
 
-FSPTX1 <- FSPTX%>%dplyr::mutate(log.Close.adj = log(`Adj Close`),
-                     log.Return.adj = log.Close.adj - lag(log.Close.adj))
 
-ytest <- FSPTX1$log.Return.adj-NASDAQ1$log.Return.adj
-plotly::plotly_build(ggplot(FSPTX1)+
-               aes(x = Date,y = ytest)+geom_point(alpha = .1)+
-               geom_smooth(method = "loess",se = TRUE))
+
 ```
 ## Check Correlation Map of log return
 
@@ -313,8 +315,81 @@ directionvscomposit[2,2]%>%pull()/apply(directionvscomposit,FUN = sum,2)[2]
 print("correlation of composit index")
 cor(predict(directionmodel),regressiontable$composit)
 
-plotly::plotly_build(ggplot(regressiontable%>%dplyr::filter(direction == 1))+aes(x = FSPTX-composit)+geom_histogram(bins = 30,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit, when same direction"))
+plotly::plotly_build(ggplot(regressiontable)+aes(x = FSPTX-composit)+geom_histogram(bins = 30,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit"))
 
-plotly::plotly_build(ggplot(regressiontable%>%dplyr::filter(direction == 0))+aes(x = FSPTX-composit)+geom_histogram(bins = 30,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX - log return of composit, when different direction"))
+plotly::plotly_build(ggplot(regressiontable)+aes(x = FSPTX)+geom_histogram(bins = 30,aes(y = ..density..),alpha = .5)+geom_density()+xlab("log return of FSPTX"))
+
+plotly::plotly_build(ggplot(FSPTX)+aes(x = dailyReturn)+geom_histogram(bins = 30,aes(y = ..density..),alpha = .5)+geom_density()+xlab("return of FSPTX"))
+
+qqnorm(FSPTX$dailyReturn)
+
+shapiro.test(FSPTX$log.Return- SnPNATech$log.Return)
+
+index_z = FSPTX$dailyReturn-mean(FSPTX$dailyReturn)/sd(FSPTX$dailyReturn)
+
+normdraw <- rnorm(length(FSPTX$dailyReturn))
+
+ks.test(index_z,normdraw)
+
+pacman::p_load(fitdistrplus,logspline,gamlss,gamlss.dist,gamlss.add)
+
+descdist(FSPTX$log.Close- SnPNATech$log.Close, discrete = FALSE)
+
+descdist(FSPTX$log.Return- SnPNATech$log.Return, discrete = FALSE)
+
+descdist(FSPTX$Close- SnPNATech$Close, discrete = FALSE)
+
+descdist(FSPTX$dailyReturn- SnPNATech$dailyReturn, discrete = FALSE)
+
+descdist(FSPTX$dailyReturn, discrete = FALSE)
+
+descdist(FSPTX$Close, discrete = FALSE)
+
+distfit <- fitDist(FSPTX$Close- SnPNATech$Close, k = 2, type = "realline", trace = FALSE, try.gamlss = TRUE)
+summary(distfit)
+```
+
+```{r}
+log.re <- data.frame(FSPTX1$log.Return-NASDAQ1$log.Return)
+pacman::p_load(forecast)
+ts.log.re <- ts(log.re,frequency = 1)
+plot(ts.log.re)
+ts.log.re.mod <- auto.arima(ts.log.re)
+ts.log.re.mod
+plot(FSPTX1$Date,FSPTX1$log.Return-NASDAQ1$log.Return)
+acf(FSPTX1$log.Return-NASDAQ1$log.Return)
+pacf(FSPTX1$log.Return-NASDAQ1$log.Return)
+plot(ts.log.re.mod$residuals)
+
+log.re1 <- data.frame(FSPTX$Close)
+ts.log.re1 <- ts(log.re1,frequency = 1)
+plot(ts.log.re1)
+index_diff <- diff(FSPTX$Close,differences = 1)
+acf(index_diff)
+
+pacf(index_diff)
+
+ts.log.re.mod1 <- auto.arima(ts.log.re1)
+
+ts.log.re.mod1
+
+plot(ts.log.re.mod1$residuals)
+
+
+log.re2 <- data.frame(SnPNATech$log.Close)%>%drop_na()
+ts.log.re2 <- ts(log.re2,frequency = 1)
+ts.log.re.mod2 <- auto.arima(ts.log.re2)
+ts.log.re.mod2
+plot(ts.log.re.mod2$residuals)
+
+
+log.re3 <- data.frame(SnPSML$log.Close)%>%drop_na()
+ts.log.re3 <- ts(log.re3,frequency = 1)
+ts.log.re.mod3 <- auto.arima(ts.log.re3)
+ts.log.re.mod2
+plot(ts.log.re.mod3$residuals)
+
+
+
 ```
 
