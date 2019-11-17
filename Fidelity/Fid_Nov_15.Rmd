@@ -1,0 +1,295 @@
+---
+title: "Fid_Nov_15"
+author: "Weiling Li"
+date: "11/15/2019"
+output: 
+  html_document: 
+    df_print: "paged"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot,readr,arm,readxl,coin)
+``` 
+
+```{r define function}
+## this function requires a dataframe input that has the daily close price named:Closed and a date column named: Date with format as: floating point and "xxxx(year)-xx(month)-xx(day)"
+## We trimmed the data from 1990-10-07 because 1990-10-08 is a Monday and Stock market closed during weekend
+dailynlogReturn <- function(Date1,DataFrame){
+  DataFrame = mutate(DataFrame, 
+                     dailyReturn = (Close-lag(Close))/Close,
+                     log.Close = log(Close),
+                     log.Return = log.Close-lag(log.Close))%>%
+    mutate(perc_dailyRe = round(dailyReturn*100.0,3))%>%
+    filter(Date >= Date1)%>%
+    filter(Date <= as.Date("2018-12-31"))
+}
+## This function returns a projection value of the fund from the start date and assuming 10k investment from the start and reinvest all earnings
+getProjectionValue <- function(DF){
+  P0 = pull(filter(DF, Date == pull(top_n(DF["Date"],-1)))%>%select(Close))
+  DF = mutate(DF,ProjValper10k = (Close*10000)/P0)
+}
+## Calculate Euclidean distances between two sets of data
+sqerr <- function(x,y){
+  z = x - y
+  z = sqrt(dot(z,z)/length(y))
+  return(z)
+}
+
+## function for standarize NAV
+standardizedNAV = function(DF){
+  return(mutate(DF,Close.z = (Close-mean(Close))/sd(Close)))
+}
+
+## restrict ourselves to study data after 2014-01-01
+StartDate = as.Date("2014-01-01")
+
+```
+
+```{r Load Data}
+FSPTX = dailynlogReturn(StartDate,read_csv("./Index_Data/FSPTX.csv"))      ## Target Fund
+NASDAQ = dailynlogReturn(StartDate,read_csv("./Index_Data/^IXIC.csv"))     ## NASDAQ
+SnP500 = dailynlogReturn(StartDate,read_csv("./Index_Data/^GSPC.csv"))     ## S&P500
+SnPMID = dailynlogReturn(StartDate,read_csv("./Index_Data/^MID.csv"))      ##
+SnPSML = dailynlogReturn(StartDate,read_csv("./Index_Data/^SML.csv"))
+RUSSELL2000 = dailynlogReturn(StartDate,read_csv("./Index_Data/^RUT.csv"))
+VGT = dailynlogReturn(StartDate,read_csv("./Index_Data/VGT.csv"))
+VIGAX = dailynlogReturn(StartDate,read_csv("./Index_Data/VIGAX.csv"))
+VTSAX = dailynlogReturn(StartDate,read_csv("./Index_Data/VTSAX.csv"))
+SnP500Info <- dailynlogReturn(StartDate,read_csv("./Index_Data/SnP500Info.csv"))
+SnPNATech <- dailynlogReturn(StartDate,read_csv("./Index_Data/SnPNATECH_clean.csv"))
+MSCI_INFO_TECH <- dailynlogReturn(StartDate,read_xls(path = "./Index_Data/MSCI_Us_IMI_information_Tech_25-50_Index.xls",sheet = 1,col_names = c("Date","Close"),skip = 1))
+Benchmark_industry_XOI <- dailynlogReturn(StartDate,read_csv("Index_Data/Benchmark_industry_XOI.csv"))
+VIX <- dailynlogReturn(StartDate,read_csv("./Index_Data/^VIX.csv"))
+```
+
+```{r clean benchmark data: MSCI Info Tech}
+## The Original Date in MSCI table is in datetime format, need to convert into date format
+MSCI_INFO_TECH <- MSCI_INFO_TECH%>%dplyr::mutate(`Date` = as_date(Date))
+MSCI_INFO_TECH <- dplyr::left_join(FSPTX%>%dplyr::select(Date),MSCI_INFO_TECH)
+
+```
+
+```{r filter dividen dates}
+## This part is from previous EDA, Too lazy to rewrite things
+dailyReturnComp = cbind(as.Date(FSPTX$Date),FSPTX$dailyReturn,NASDAQ$dailyReturn,SnP500$dailyReturn,VGT$dailyReturn,VIGAX$dailyReturn,VTSAX$dailyReturn)
+colnames(dailyReturnComp) = c("Date","FSPTX","NASDAQ","SnP500","VGT","VIGAX","VTSAX")
+epsilon = 0.000000000000000001
+dailyReturnComp = data.frame(dailyReturnComp)%>%mutate(Date = as_date(Date),vsNASDAQ = ifelse(NASDAQ*NASDAQ<=epsilon,FSPTX,FSPTX/NASDAQ),vsSnP500 = ifelse(SnP500*SnP500<=epsilon,FSPTX,FSPTX/SnP500),vsVGT = ifelse(VGT*VGT<=epsilon,FSPTX,FSPTX/VGT),vsVIGAX = ifelse(VIGAX*VIGAX<=epsilon,FSPTX,FSPTX/VIGAX),vsVTSAX = ifelse(VTSAX*VTSAX<=epsilon,FSPTX,FSPTX/VTSAX))%>%mutate(minusNASDAQ = FSPTX-NASDAQ,minusSnP500 = FSPTX-SnP500,minusVGT = FSPTX-VGT,minusVIGAX= FSPTX-VIGAX,minusVTSAX = FSPTX-VTSAX)
+
+## Capture Dividen dates
+DividenDates <- dailyReturnComp%>%dplyr::filter(minusNASDAQ < -0.025)%>%dplyr::select(Date)%>%pull()
+## Drop the dates from all indexes
+FSPTX <-  FSPTX%>%dplyr::filter(!Date %in% DividenDates)
+NASDAQ  <- NASDAQ%>%dplyr::filter(!Date %in% DividenDates)
+SnP500  <- SnP500%>%dplyr::filter(!Date %in% DividenDates)
+SnPMID <- SnPMID%>%dplyr::filter(!Date %in% DividenDates)
+SnPSML  <- SnPSML%>%dplyr::filter(!Date %in% DividenDates)
+RUSSELL2000  <- RUSSELL2000%>%dplyr::filter(!Date %in% DividenDates)
+VGT  <- VGT%>%dplyr::filter(!Date %in% DividenDates)
+VIGAX  <- VIGAX%>%dplyr::filter(!Date %in% DividenDates)
+VTSAX  <- VTSAX%>%dplyr::filter(!Date %in% DividenDates)
+SnP500Info <- SnP500Info%>%dplyr::filter(!Date %in% DividenDates)
+SnPNATech <- SnPNATech%>%dplyr::filter(!Date %in% DividenDates)
+MSCI_INFO_TECH <- MSCI_INFO_TECH%>%dplyr::filter(!Date %in% DividenDates)
+Benchmark_industry_XOI <- Benchmark_industry_XOI%>%dplyr::filter(!Date %in% DividenDates)
+VIX <- VIX%>%dplyr::filter(!Date %in% DividenDates)
+
+## Get the dates and store them for indicator usage.
+dates <- FSPTX%>%dplyr::select(Date)%>%dplyr::mutate(Year = format.Date(Date,"%Y"))
+
+```
+
+```{r Indicators: Hightech Export by percentage by year}
+
+hightech.expo <- read_xls("./Indicators/HighTechExportsPercentage.xls",skip = 3,col_names = TRUE,sheet = 1)%>%  # Read data
+  dplyr::select(1:2,`2007`:`2018`)%>%  #select years interested
+  # main focus is United States
+  dplyr::filter(`Country Code` %in% c("USA"))%>%
+  # Rearrange the table so that it can be left_join to the dates table
+  tidyr::pivot_longer(cols = `2007`:`2018`,names_to = "Year",values_to = "expo.perc")
+```
+
+```{r Overall Indicators for backup}
+all.indicators <- read.csv("./Indicators/MainSci&Tech.csv",header = TRUE)%>%dplyr::filter(COU %in% "USA")
+```
+
+```{r Researchers in R&D per million population}
+rnd.permil <- read_xls("./Indicators/ResearchersinR&D.xls",skip = 3,col_names = TRUE,sheet = 1)%>%
+  dplyr::select(1:2,`1996`:`2018`)%>%
+  dplyr::filter(`Country Code` %in% c("USA"))%>%
+  tidyr::pivot_longer(cols = `1996`:`2018`,names_to = "Year",values_to = "R&DperMil")
+```
+
+```{r Scientific and Technology Journals indicator}
+SciJour.indicator <- read_xls("./Indicators/ScientificJournalIndicator.xls",skip = 3,col_names = TRUE,sheet = 1)%>%
+  dplyr::select(1:2,`2013`:`2018`)%>%
+  dplyr::filter(`Country Code` %in% c("USA"))%>%
+  tidyr::pivot_longer(cols = `2013`:`2018`,names_to = "Year",values_to = "Sci.Jour")
+```
+
+```{r Trademark Application per year}
+Trademarkappli.peryear <- read_xls("./Indicators/TradeMarkApplication.xls",skip = 3,col_names = TRUE,sheet = 1)%>%
+  dplyr::select(1:2,`1980`:`2018`)%>%
+  dplyr::filter(`Country Code` %in% c("USA"))%>%
+  tidyr::pivot_longer(cols = `1980`:`2018`,names_to = "Year",values_to = "Trademark.appl")
+```
+
+```{r function for ploting residual and qqplot from fitted model,echo=TRUE}
+## this function takes:
+## md:              a lm model, 
+## modelequation:   a string that describe the model(if not specified, will be the $call of the lm model)
+## linecolor:       specify a color for the line occurs in the plot
+## The two plots are in list, and it is a ggplot so 
+## one can modify the plot by adding theme to the output plots 
+
+plotmodel <- function(md,modelequation = md$call,linecolor = "#CE8891"){
+  p1 <- ggplot(md)+
+    aes(x = .fitted,y = .stdresid)+
+    geom_point()+geom_smooth(method = "loess",se = F)+
+    geom_abline(intercept = 2,slope = 0,linetype = "dashed",color = linecolor)+
+    geom_abline(intercept = -2,slope = 0,linetype = "dashed",color = linecolor)+
+    xlab("Fitted value: y_hat")+
+    ylab("Standardized Residuals")+
+    ggtitle(label = "Residual plot",subtitle = modelequation)
+
+  p2 <- ggplot(fit.benchmark)+
+    aes(sample = .stdresid)+
+    stat_qq(color = linecolor)+
+    stat_qq_line(linetype = "dashed")+
+    xlab("Theoretical Normal distribution")+
+    ylab("Standardized Residuals")+
+    ggtitle(label = "QQ plot for residuals")
+  
+  return(list(p1,p2))
+}
+```
+
+```{r function for generating fake simulation data for single fit,echo=TRUE}
+## generate SD for each observed datapoint 
+md.std <- function(md){
+  X_ <- md$model[,2]
+  left <- diag(x = X_ )
+  mid <- as.numeric(vcov(md))*diag(x = 1,nrow = length(X_))
+  sig <- summary(md)$sigma
+  ## the original sd estimation for a specific observation x should be
+  ## sqrt(1+x %*% vcov(model) %*% x.T)  *   sigma_y
+  ## However, this only allows for point wise multiplication. For our purpose,
+  ## because we need to calculate for all the adjusted standard error for each predicted y
+  ## the left X is transform into a diagnal matrix with ith entry is X_i,
+  ## the vcov(model) is also transformed into a diagnal matrix such that ensure each X_i will
+  ## independently times a single vcov(model). 
+  ## The right is just the feature matrix X with each row is one observation
+  return(sqrt(1+left %*% mid %*% X_)*sig)
+}
+
+## using predicted y value as mean and calculated sd as sd simulate y 
+md.y_sim <- function(md){
+  y_pred <- predict(md)
+  y_sd <- md.std(md)
+  return(rnorm(n = length(y_pred),mean = y_pred,sd = y_sd))
+}
+
+## test y_sim and actual y using ks test,low p-value will reject the hypo-
+## thesis that they are from the same distribution
+md.ks.test <- function(md){
+  y_obs <- md$model[,1]
+  y_sim <- md.y_sim(md)
+  return(ks.test(y_obs,y_sim))
+}
+
+## test y_sim and actual y using permutation test, low p-value will rej-
+## ect the hypothesis that they are independent
+
+md.perm.test <- function(md){
+  y_obs <- md$model[,1]
+  y_sim <- md.y_sim(md)
+  return(coin::independence_test(y_obs ~ y_sim))
+}
+
+## test y_sim and actual y using t-statistics
+
+md.t.test <- function(md){
+  y_obs <- md$model[,1]
+  y_sim <- md.y_sim(md)
+  return(t.test(y_obs,y_sim))
+}
+## plot the observed data and simulated data as histogram on the same graph
+plot.md.hist <- function(md,modelequation = md$call){
+  y_obs <- md$model[,1]
+  y_sim <- md.y_sim(md)
+  Y_ <- data.frame(cbind(y_obs,y_sim))%>%tidyr::pivot_longer(cols = 1:2,names_to = "Y",values_to = "value")
+  p1 <- ggplot(Y_)+
+    geom_histogram(aes(x = value,fill = Y,color = Y),position = "identity",alpha = .2)+
+    xlab("")+
+    ggtitle(label = "Histogram of y_obs vs y_sim",subtitle = modelequation)
+  return(p1)
+}
+
+## correlation test, pearson or spearman
+md.corr.test <- function(md,method = "pearson"){
+  y_obs <- md$model[,1]
+  y_sim <- md.y_sim(md)
+  return(cor(y_obs,y_sim,use = "everything",method = method))
+}
+
+## F-test for two sample sd
+
+md.f.test <- function(md){
+  y_obs <- md$model[,1]
+  y_sim <- md.y_sim(md)
+  return(var.test(y_sim,y_obs))
+}
+```
+
+## fit benchmark
+
+The logic goes:
+
+* fit a `lm` model with `FSPTX` as the outcome and benchmark(`MSCI US IMI Info Tech 25/50`) as predictor(drop intercept)
+* check residuals
+  - Is residual plot make sense
+  - Is residual follows a normal distribution
+  - Is the standardized residual has a 95% interval within -2 to 2
+* Check if we can regenerate the original data
+  - Calculate $y_{sim}$ and $y_{obs}$.
+  - KS test: Check if we can reject the hypothesis they are from the same distribution.
+  - Permutation test: Check if we can reject the hypothesis that they are independent.
+  - T test: If they are dependent, check the mean of them using t test.(assume normality)
+  - F test: If they are dependent, check the if the variance are different using f test
+  - Visually compare results using histogram.
+
+```{r fit benchmark and fit check}
+
+ggplot()+aes(x = FSPTX$log.Return, y = MSCI_INFO_TECH$log.Return)+
+  geom_point()+xlab("FSPTX")+ylab("MSCI IT")+ggtitle(label = "Check linear relationship")
+
+fit.benchmark <- lm(FSPTX$log.Return~MSCI_INFO_TECH$log.Return-1)
+summary(fit.benchmark)
+
+p.benchmark <- plotmodel(fit.benchmark,"y ~ MSCI(benchmark) - 1","#CE8891")
+## check residuals
+p.benchmark[[1]]
+p.benchmark[[2]]
+## check standardized residuals the 95% interval
+quantile(scale(fit.benchmark$residuals),probs = c(.25,.95))
+## simulate fake data and compare results
+print(benchmark.ks.test <- md.ks.test(fit.benchmark))
+
+print(benchmark.perm.test <- md.perm.test(fit.benchmark))
+
+print(benchmark.t.test <- md.t.test(fit.benchmark))
+
+print("pearson correlation test")
+print(benchmark.corr.test <- md.corr.test(md = fit.benchmark,method = "pearson"))
+
+print(benchmark.f.test <- md.f.test(fit.benchmark))
+plot.md.hist(fit.benchmark,"y ~ MSCI(benchmark) - 1")
+
+```
+
+```{r}
+
+
+```
+
