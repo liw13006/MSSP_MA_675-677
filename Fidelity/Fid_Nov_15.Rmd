@@ -9,7 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
-pacman::p_load(pracma,lubridate,tidyverse,dplyr,corrplot,readr,arm,readxl,coin)
+pacman::p_load(pracma,lubridate,tidyverse,corrplot,arm,readxl,coin)
 ``` 
 
 ```{r define function}
@@ -296,7 +296,7 @@ The logic goes:
   - F test: If they are dependent, check the if the variance are different using f test
   - Visually compare results using histogram.
 
-```{r fit benchmark and fit check}
+```{r fit benchmark and fit check, echo = TRUE}
 
 ggplot()+aes(x = FSPTX$log.Return, y = MSCI_INFO_TECH$log.Return)+
   geom_point()+xlab("FSPTX")+ylab("MSCI IT")+ggtitle(label = "Check linear relationship")

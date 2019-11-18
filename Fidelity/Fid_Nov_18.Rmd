@@ -1,0 +1,155 @@
+---
+title: "Fid_Nov_18"
+author: "Weiling Li"
+date: "11/18/2019"
+output: 
+  html_document: 
+    df_print: "paged"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE)
+pacman::p_load(pracma,lubridate,tidyverse,corrplot,arm,readxl,coin)
+``` 
+```{r source equation, echo = TRUE}
+## reads in functions that calculate daily log returns, log closed value, etc.
+source(file = "./functions/fid_data_wrangler.R")
+## reads in functions calculate goodness of fit
+source(file = "./functions/fid_goodness_of_fit.R")
+```
+
+```{r set start date}
+## restrict ourselves to study data after 2014-01-01
+StartDate = as.Date("2014-01-01")
+
+```
+
+```{r Load Data, echo=TRUE}
+FSPTX = dailynlogReturn(StartDate,read_csv("./Index_Data/FSPTX.csv"))      ## Target Fund
+NASDAQ = dailynlogReturn(StartDate,read_csv("./Index_Data/^IXIC.csv"))     ## NASDAQ
+SnP500 = dailynlogReturn(StartDate,read_csv("./Index_Data/^GSPC.csv"))     ## S&P500
+SnPMID = dailynlogReturn(StartDate,read_csv("./Index_Data/^MID.csv"))      ##
+SnPSML = dailynlogReturn(StartDate,read_csv("./Index_Data/^SML.csv"))
+RUSSELL2000 = dailynlogReturn(StartDate,read_csv("./Index_Data/^RUT.csv"))
+VGT = dailynlogReturn(StartDate,read_csv("./Index_Data/VGT.csv"))
+VIGAX = dailynlogReturn(StartDate,read_csv("./Index_Data/VIGAX.csv"))
+VTSAX = dailynlogReturn(StartDate,read_csv("./Index_Data/VTSAX.csv"))
+SnP500Info <- dailynlogReturn(StartDate,read_csv("./Index_Data/SnP500Info.csv"))
+SnPNATech <- dailynlogReturn(StartDate,read_csv("./Index_Data/SnPNATECH_clean.csv"))
+MSCI_INFO_TECH <- dailynlogReturn(StartDate,read_xls(path = "./Index_Data/MSCI_Us_IMI_information_Tech_25-50_Index.xls",sheet = 1,col_names = c("Date","Close"),skip = 1))
+Benchmark_industry_XOI <- dailynlogReturn(StartDate,read_csv("Index_Data/Benchmark_industry_XOI.csv"))
+VIX <- dailynlogReturn(StartDate,read_csv("./Index_Data/^VIX.csv"))
+```
+
+```{r clean benchmark data: MSCI Info Tech}
+## The Original Date in MSCI table is in datetime format, need to convert into date format
+MSCI_INFO_TECH <- MSCI_INFO_TECH%>%dplyr::mutate(`Date` = as_date(Date))
+MSCI_INFO_TECH <- dplyr::left_join(FSPTX%>%dplyr::select(Date),MSCI_INFO_TECH)
+
+```
+
+```{r filter dividen dates}
+## This part is from previous EDA, Too lazy to rewrite things
+dailyReturnComp = cbind(as.Date(FSPTX$Date),FSPTX$dailyReturn,NASDAQ$dailyReturn,SnP500$dailyReturn,VGT$dailyReturn,VIGAX$dailyReturn,VTSAX$dailyReturn)
+colnames(dailyReturnComp) = c("Date","FSPTX","NASDAQ","SnP500","VGT","VIGAX","VTSAX")
+epsilon = 0.000000000000000001
+dailyReturnComp = data.frame(dailyReturnComp)%>%mutate(Date = as_date(Date),vsNASDAQ = ifelse(NASDAQ*NASDAQ<=epsilon,FSPTX,FSPTX/NASDAQ),vsSnP500 = ifelse(SnP500*SnP500<=epsilon,FSPTX,FSPTX/SnP500),vsVGT = ifelse(VGT*VGT<=epsilon,FSPTX,FSPTX/VGT),vsVIGAX = ifelse(VIGAX*VIGAX<=epsilon,FSPTX,FSPTX/VIGAX),vsVTSAX = ifelse(VTSAX*VTSAX<=epsilon,FSPTX,FSPTX/VTSAX))%>%mutate(minusNASDAQ = FSPTX-NASDAQ,minusSnP500 = FSPTX-SnP500,minusVGT = FSPTX-VGT,minusVIGAX= FSPTX-VIGAX,minusVTSAX = FSPTX-VTSAX)
+
+## Capture Dividen dates
+DividenDates <- dailyReturnComp%>%dplyr::filter(minusNASDAQ < -0.025)%>%dplyr::select(Date)%>%pull()
+## Drop the dates from all indexes
+FSPTX <-  FSPTX%>%dplyr::filter(!Date %in% DividenDates)
+NASDAQ  <- NASDAQ%>%dplyr::filter(!Date %in% DividenDates)
+SnP500  <- SnP500%>%dplyr::filter(!Date %in% DividenDates)
+SnPMID <- SnPMID%>%dplyr::filter(!Date %in% DividenDates)
+SnPSML  <- SnPSML%>%dplyr::filter(!Date %in% DividenDates)
+RUSSELL2000  <- RUSSELL2000%>%dplyr::filter(!Date %in% DividenDates)
+VGT  <- VGT%>%dplyr::filter(!Date %in% DividenDates)
+VIGAX  <- VIGAX%>%dplyr::filter(!Date %in% DividenDates)
+VTSAX  <- VTSAX%>%dplyr::filter(!Date %in% DividenDates)
+SnP500Info <- SnP500Info%>%dplyr::filter(!Date %in% DividenDates)
+SnPNATech <- SnPNATech%>%dplyr::filter(!Date %in% DividenDates)
+MSCI_INFO_TECH <- MSCI_INFO_TECH%>%dplyr::filter(!Date %in% DividenDates)
+Benchmark_industry_XOI <- Benchmark_industry_XOI%>%dplyr::filter(!Date %in% DividenDates)
+VIX <- VIX%>%dplyr::filter(!Date %in% DividenDates)
+
+## Get the dates and store them for indicator usage.
+dates <- FSPTX%>%dplyr::select(Date)%>%dplyr::mutate(Year = format.Date(Date,"%Y"))
+
+```
+
+```{r Indicators: Hightech Export by percentage by year}
+
+hightech.expo <- read_xls("./Indicators/HighTechExportsPercentage.xls",skip = 3,col_names = TRUE,sheet = 1)%>%  # Read data
+  dplyr::select(1:2,`2007`:`2018`)%>%  #select years interested
+  # main focus is United States
+  dplyr::filter(`Country Code` %in% c("USA"))%>%
+  # Rearrange the table so that it can be left_join to the dates table
+  tidyr::pivot_longer(cols = `2007`:`2018`,names_to = "Year",values_to = "expo.perc")
+```
+
+```{r Overall Indicators for backup}
+all.indicators <- read.csv("./Indicators/MainSci&Tech.csv",header = TRUE)%>%dplyr::filter(COU %in% "USA")
+```
+
+```{r Researchers in R&D per million population}
+rnd.permil <- read_xls("./Indicators/ResearchersinR&D.xls",skip = 3,col_names = TRUE,sheet = 1)%>%
+  dplyr::select(1:2,`1996`:`2018`)%>%
+  dplyr::filter(`Country Code` %in% c("USA"))%>%
+  tidyr::pivot_longer(cols = `1996`:`2018`,names_to = "Year",values_to = "R&DperMil")
+```
+
+```{r Scientific and Technology Journals indicator}
+SciJour.indicator <- read_xls("./Indicators/ScientificJournalIndicator.xls",skip = 3,col_names = TRUE,sheet = 1)%>%
+  dplyr::select(1:2,`2013`:`2018`)%>%
+  dplyr::filter(`Country Code` %in% c("USA"))%>%
+  tidyr::pivot_longer(cols = `2013`:`2018`,names_to = "Year",values_to = "Sci.Jour")
+```
+
+```{r Trademark Application per year}
+Trademarkappli.peryear <- read_xls("./Indicators/TradeMarkApplication.xls",skip = 3,col_names = TRUE,sheet = 1)%>%
+  dplyr::select(1:2,`1980`:`2018`)%>%
+  dplyr::filter(`Country Code` %in% c("USA"))%>%
+  tidyr::pivot_longer(cols = `1980`:`2018`,names_to = "Year",values_to = "Trademark.appl")
+```
+
+## fit benchmark
+
+The logic goes:
+
+* fit a `lm` model with `FSPTX` as the outcome and benchmark(`MSCI US IMI Info Tech 25/50`) as predictor(drop intercept)
+
+* Check if fund and benchmark has linear relationship
+
+* Check residuals
+  - Does the residual plot show any trend?
+  - Is residual follows a normal distribution?
+  - Standardized residual Show follows a distribution of $\mathcal{N}(0,1)$. Does the residual plot support that?
+  
+* Check if we can regenerate the original data
+  - Calculate $y_{sim}$ and $y_{obs}$.
+  - KS test: Check if we can reject the hypothesis they are from the same distribution.
+  - Permutation test: Check if we can reject the hypothesis that they are independent.
+  - T test: If they are dependent, check the mean of them using t test.(assume normality)
+  - F test: If they are dependent, check the if the variance are different using f test.(assume normality)
+  - Visually compare results using histogram.
+
+```{r fit benchmark and fit check, echo = TRUE}
+
+
+ggplot()+aes(x = FSPTX$log.Return, y = MSCI_INFO_TECH$log.Return)+
+  geom_point()+xlab("FSPTX")+ylab("MSCI IT")+ggtitle(label = "Check linear relationship")
+
+fit.benchmark <- lm(FSPTX$log.Return~MSCI_INFO_TECH$log.Return-1)
+summary(fit.benchmark)
+
+p.benchmark <- plotmodel(fit.benchmark,"y ~ MSCI(benchmark) - 1","#CE8891")
+## check residuals
+p.benchmark$redisualplot
+p.benchmark$qqplot
+## check standardized residuals the 95% interval
+quantile(scale(fit.benchmark$residuals),probs = c(.25,.95))
+## simulate fake data and compare results
+md_test(fit.benchmark,method = "pearson",modelequation ="y ~ MSCI(benchmark) - 1" )
+
+```
