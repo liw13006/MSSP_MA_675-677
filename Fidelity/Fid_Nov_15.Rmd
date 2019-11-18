@@ -168,7 +168,7 @@ plotmodel <- function(md,modelequation = md$call,linecolor = "#CE8891"){
 
 ```{r function for generating fake simulation data for single fit,echo=TRUE}
 ## generate SD for each observed datapoint 
-md.std <- function(md){
+md_std <- function(md){
   X_ <- md$model[,2]
   left <- diag(x = X_ )
   mid <- as.numeric(vcov(md))*diag(x = 1,nrow = length(X_))
@@ -185,40 +185,40 @@ md.std <- function(md){
 }
 
 ## using predicted y value as mean and calculated sd as sd simulate y 
-md.y_sim <- function(md){
+md_y_sim <- function(md){
   y_pred <- predict(md)
-  y_sd <- md.std(md)
+  y_sd <- md_std(md)
   return(rnorm(n = length(y_pred),mean = y_pred,sd = y_sd))
 }
 
 ## test y_sim and actual y using ks test,low p-value will reject the hypo-
 ## thesis that they are from the same distribution
-md.ks.test <- function(md){
+md_ks_test <- function(md){
   y_obs <- md$model[,1]
-  y_sim <- md.y_sim(md)
+  y_sim <- md_y_sim(md)
   return(ks.test(y_obs,y_sim))
 }
 
 ## test y_sim and actual y using permutation test, low p-value will rej-
 ## ect the hypothesis that they are independent
 
-md.perm.test <- function(md){
+md_perm_test <- function(md){
   y_obs <- md$model[,1]
-  y_sim <- md.y_sim(md)
+  y_sim <- md_y_sim(md)
   return(coin::independence_test(y_obs ~ y_sim))
 }
 
 ## test y_sim and actual y using t-statistics
 
-md.t.test <- function(md){
+md_t_test <- function(md){
   y_obs <- md$model[,1]
-  y_sim <- md.y_sim(md)
+  y_sim <- md_y_sim(md)
   return(t.test(y_obs,y_sim))
 }
 ## plot the observed data and simulated data as histogram on the same graph
-plot.md.hist <- function(md,modelequation = md$call){
+plot_md_hist <- function(md,modelequation = md$call){
   y_obs <- md$model[,1]
-  y_sim <- md.y_sim(md)
+  y_sim <- md_y_sim(md)
   Y_ <- data.frame(cbind(y_obs,y_sim))%>%tidyr::pivot_longer(cols = 1:2,names_to = "Y",values_to = "value")
   p1 <- ggplot(Y_)+
     geom_histogram(aes(x = value,fill = Y,color = Y),position = "identity",alpha = .2)+
@@ -228,27 +228,27 @@ plot.md.hist <- function(md,modelequation = md$call){
 }
 
 ## correlation test, pearson or spearman
-md.corr.test <- function(md,method = "pearson"){
+md_corr_test <- function(md,method = "pearson"){
   y_obs <- md$model[,1]
-  y_sim <- md.y_sim(md)
+  y_sim <- md_y_sim(md)
   return(cor(y_obs,y_sim,use = "everything",method = method))
 }
 
 ## F-test for two sample sd
 
-md.f.test <- function(md){
+md_f_test <- function(md){
   y_obs <- md$model[,1]
-  y_sim <- md.y_sim(md)
+  y_sim <- md_y_sim(md)
   return(var.test(y_sim,y_obs))
 }
 
 ## Combine the above tests into a single test to reduce computation time and comparable results
 
-md.test <- function(md,method = "pearson",modelequation = md$call){
+md_test <- function(md,method = "pearson",modelequation = md$call){
   ## Right now only work for a lm model with only 1 predictor, but with modification
   ## it is easy to have it work for multiple predictors.
   y_obs <- md$model[,1]
-  y_sim <- md.y_sim(md)
+  y_sim <- md_y_sim(md)
   ## KS test
   md.ks.result <- ks.test(y_obs,y_sim)
   ## permutation test, use lib coin
@@ -271,9 +271,9 @@ md.test <- function(md,method = "pearson",modelequation = md$call){
     list(KS_test = md.ks.result,
          Permutation_test = md.perm.result,
          t_test = md.t.result,
-         histogram = p1,
          correlation_test = md.corr.result,
-         variance_F_test = md.f.result
+         variance_F_test = md.f.result,
+         histogram = p1
     )
   )
 }
@@ -311,22 +311,23 @@ p.benchmark[[2]]
 ## check standardized residuals the 95% interval
 quantile(scale(fit.benchmark$residuals),probs = c(.25,.95))
 ## simulate fake data and compare results
-print(benchmark.ks.test <- md.ks.test(fit.benchmark))
+print(benchmark.ks.test <- md_ks_test(fit.benchmark))
 
-print(benchmark.perm.test <- md.perm.test(fit.benchmark))
+print(benchmark.perm.test <- md_perm_test(fit.benchmark))
 
-print(benchmark.t.test <- md.t.test(fit.benchmark))
+print(benchmark.t.test <- md_t_test(fit.benchmark))
 
 print("pearson correlation test")
-print(benchmark.corr.test <- md.corr.test(md = fit.benchmark,method = "pearson"))
+print(benchmark.corr.test <- md_corr_test(md = fit.benchmark,method = "pearson"))
 
-print(benchmark.f.test <- md.f.test(fit.benchmark))
-plot.md.hist(fit.benchmark,"y ~ MSCI(benchmark) - 1")
+print(benchmark.f.test <- md_f_test(fit.benchmark))
+plot_md_hist(fit.benchmark,"y ~ MSCI(benchmark) - 1")
 
 ```
 
 ```{r, echo = TRUE}
 
-md.test(fit.benchmark,method = "pearson",modelequation ="y ~ MSCI(benchmark) - 1" )
+md_test(fit.benchmark,method = "pearson",modelequation ="y ~ MSCI(benchmark) - 1" )
+
 ```
 
