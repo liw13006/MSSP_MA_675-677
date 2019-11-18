@@ -1,0 +1,14 @@
+Package: FidFunc
+Type: Package
+Title: For Fidelity MSSP joint project
+Version: 0.1.0
+Author: Weiling Li
+Maintainer: The package maintainer <liw13006@bu.edu>
+Description: Need tidyverse, arm and coin 
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+NeedsCompilation: no
+Packaged: 2019-11-18 21:19:43 UTC; nova
+Built: R 3.6.1; ; 2019-11-18 21:19:47 UTC; unix

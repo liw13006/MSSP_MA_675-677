@@ -1,14 +1,14 @@
 
 
-require(arm,coin,tidyverse)
+require(arm,coin)
 
 # ---------------------------------------------------------------------------
 ## this function takes:
-## md:              a lm model, 
+## md:              a lm model,
 ## modelequation:   a string that describe the model(if not specified, will be the $call of the lm model)
 ## linecolor:       specify a color for the line occurs in the plot
-## The two plots are in list, and it is a ggplot so 
-## one can modify the plot by adding theme to the output plots 
+## The two plots are in list, and it is a ggplot so
+## one can modify the plot by adding theme to the output plots
 
 plotmodel <- function(md,modelequation = md$call,linecolor = "#CE8891"){
   p1 <- ggplot(md)+
@@ -19,7 +19,7 @@ plotmodel <- function(md,modelequation = md$call,linecolor = "#CE8891"){
     xlab("Fitted value: y_hat")+
     ylab("Standardized Residuals")+
     ggtitle(label = "Residual plot",subtitle = modelequation)
-  
+
   p2 <- ggplot(fit.benchmark)+
     aes(sample = .stdresid)+
     stat_qq(color = linecolor)+
@@ -27,14 +27,14 @@ plotmodel <- function(md,modelequation = md$call,linecolor = "#CE8891"){
     xlab("Theoretical Normal distribution")+
     ylab("Standardized Residuals")+
     ggtitle(label = "QQ plot for residuals")
-  
+
   return(list(redisualplot = p1,
               qqplot = p2))
 }
 
 # ---------------------------------------------------------------------------
 
-## generate SD for each observed datapoint 
+## generate SD for each observed datapoint
 md_std <- function(md){
   X_ <- md$model[,2]
   left <- diag(x = X_ )
@@ -46,13 +46,13 @@ md_std <- function(md){
   ## because we need to calculate for all the adjusted standard error for each predicted y
   ## the left X is transform into a diagnal matrix with ith entry is X_i,
   ## the vcov(model) is also transformed into a diagnal matrix such that ensure each X_i will
-  ## independently times a single vcov(model). 
+  ## independently times a single vcov(model).
   ## The right is just the feature matrix X with each row is one observation
   return(sqrt(1+left %*% mid %*% X_)*sig)
 }
 
 
-## using predicted y value as mean and calculated sd as sd simulate y 
+## using predicted y value as mean and calculated sd as sd simulate y
 md_y_sim <- function(md){
   y_pred <- predict(md)
   y_sd <- md_std(md)
@@ -82,7 +82,7 @@ md_test <- function(md,method = "pearson",modelequation = md$call){
   md.corr.result <- cor(y_obs,y_sim,use = "everything",method = method)
   ## F test for variance
   md.f.result <- var.test(y_sim,y_obs)
-  
+
   return(
     list(KS_test = md.ks.result,
          Permutation_test = md.perm.result,
